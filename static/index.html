@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>micro-SFA</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header id="app-header" class="hidden">
+    <div class="header-inner">
+      <span class="app-title">micro-SFA</span>
+      <nav id="app-nav"></nav>
+      <div class="header-right">
+        <span id="current-user-label"></span>
+        <button id="logout-btn" class="btn btn-ghost">ログアウト</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="app-root"></main>
+
+  <!-- ES Modules エントリーポイント -->
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
