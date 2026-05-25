@@ -11,6 +11,9 @@ import { renderForecast } from '/views/forecast.js'
 import { renderDashboard } from '/views/dashboard.js'
 import { renderMaster } from '/views/master.js'
 import { renderCoach } from '/views/coach.js'
+import { renderLp } from '/views/lp.js'
+import { renderLpSales } from '/views/lp-sales.js'
+import { renderLpManager } from '/views/lp-manager.js'
 
 // ✅ 状態はすべて AppState に一元管理。各 view は AppState を読み書きする。
 export const AppState = {
@@ -86,6 +89,27 @@ function route() {
     updateHeader()
     root.innerHTML = ''
     renderLogin(root)
+    return
+  }
+
+  if (hash === '#lp') {
+    updateHeader()
+    root.innerHTML = ''
+    renderLp(root)
+    return
+  }
+
+  if (hash === '#lp-sales') {
+    updateHeader()
+    root.innerHTML = ''
+    renderLpSales(root)
+    return
+  }
+
+  if (hash === '#lp-manager') {
+    updateHeader()
+    root.innerHTML = ''
+    renderLpManager(root)
     return
   }
 

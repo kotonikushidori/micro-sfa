@@ -1,6 +1,7 @@
 // kanban.js: Phase別カンバン画面。警告バッジ・部署/担当者フィルター付き。
 import { AppState } from '/app.js'
-import { PHASES, BALL_OWNER_OPTIONS, DEFAULT_BALL_OWNER, calcCurrentPhase, calcBantScore, isWarning, formatCurrency } from '/constants.js'
+import { PHASES, BALL_OWNER_OPTIONS, DEFAULT_BALL_OWNER, calcCurrentPhase, calcBantScore, isWarning, formatCurrency, getFiscalQuarterKey } from '/constants.js'
+import { loadTargets } from '/data.js'
 
 export function renderKanban(root) {
   const user    = AppState.currentUser
@@ -39,13 +40,15 @@ export function renderKanban(root) {
 
   function applyFilter() {
     const deptId = document.getElementById('filter-dept')?.value ?? ''
-    const userId = document.getElementById('filter-user')?.value ?? ''
+    const userId = isSales
+      ? user.id
+      : (document.getElementById('filter-user')?.value ?? '')
     let filtered = basDeals.filter(d => !d.isLost)
 
     if (deptId) filtered = filtered.filter(d => d.dept_id === deptId)
-    if (userId) filtered = filtered.filter(d => d.assignee_id === userId)
+    if (!isSales && userId) filtered = filtered.filter(d => d.assignee_id === userId)
 
-    renderBoard(filtered)
+    renderBoard(filtered, { deptId, userId })
   }
 
   if (!isSales) {
@@ -56,29 +59,62 @@ export function renderKanban(root) {
   applyFilter()
 }
 
-function renderBoard(deals) {
+function renderBoard(deals, { deptId = '', userId = '' } = {}) {
   const board = document.getElementById('kanban-board')
   if (!board) return
 
+  // 今期の目標合計（受注済みカラム用）
+  const qk      = getFiscalQuarterKey(new Date(), AppState.settings.fiscalStartMonth)
+  const targets  = loadTargets()
+  let quarterTarget = 0
+  if (userId) {
+    quarterTarget = targets.rep[userId]?.[qk] ?? 0
+  } else if (deptId) {
+    quarterTarget = targets.dept[deptId]?.[qk] ?? 0
+  } else {
+    // 全担当者合計
+    quarterTarget = Object.values(targets.rep).reduce((s, qmap) => s + (qmap[qk] ?? 0), 0)
+  }
+
   // カラム定義：Phase 1〜4 + 受注済み
+  const wonDeals = deals.filter(d => d.isWon)
   const columns = [
     ...PHASES.map(p => ({
-      id:    `phase_${p.id}`,
-      label: p.label,
-      deals: deals.filter(d => !d.isWon && calcCurrentPhase(d) === p.id),
+      id:     `phase_${p.id}`,
+      label:  p.label,
+      deals:  deals.filter(d => !d.isWon && calcCurrentPhase(d) === p.id),
+      isWon:  false,
     })),
     {
       id:    'won',
       label: '受注済み',
-      deals: deals.filter(d => d.isWon),
+      deals: wonDeals,
+      isWon: true,
     },
   ]
 
-  board.innerHTML = columns.map(col => `
+  board.innerHTML = columns.map(col => {
+    const amtSum = col.deals.reduce((s, d) => s + (d.amount ?? 0), 0)
+    const wonHeader = col.isWon && quarterTarget > 0
+      ? (() => {
+          const pct = Math.round((amtSum / quarterTarget) * 100)
+          const cls = pct >= 100 ? 'won-pct--achieved' : pct >= 70 ? 'won-pct--close' : 'won-pct--low'
+          return `<div class="col-target-row">
+            <span class="col-target-label">目標 ${formatCurrency(quarterTarget)}</span>
+            <span class="won-pct ${cls}">${pct}%</span>
+          </div>`
+        })()
+      : ''
+
+    return `
     <div class="kanban-column">
       <div class="kanban-col-header">
-        <span class="col-title">${col.label}</span>
-        <span class="col-count">${col.deals.length}件</span>
+        <div class="col-header-top">
+          <span class="col-title">${col.label}</span>
+          <span class="col-count">${col.deals.length}件</span>
+        </div>
+        <div class="col-amount-sum">${formatCurrency(amtSum)}</div>
+        ${wonHeader}
       </div>
       <div class="kanban-cards">
         ${col.deals.length === 0
@@ -87,7 +123,7 @@ function renderBoard(deals) {
         }
       </div>
     </div>
-  `).join('')
+  `}).join('')
 }
 
 function renderCard(deal) {

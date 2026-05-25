@@ -48,6 +48,8 @@ export function renderLogin(root) {
           <button type="submit" class="btn btn-primary btn-block">ログイン</button>
         </form>
 
+        <a href="#lp" class="btn-lp-link">💡 micro-SFAとは？</a>
+
         <button type="button" id="btn-reset-data" class="btn-reset-link">
           デモデータをリセット（ログインできない場合）
         </button>
