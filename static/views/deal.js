@@ -1,7 +1,7 @@
 // deal.js: 案件入力・編集画面。Phase チェックボックスと BANT ラジオボタンで構成。
 import { AppState, refreshState } from '/app.js'
 import { createDeal, updateDeal, appendActivity, loadActivitiesByDeal } from '/data.js'
-import { PHASES, BANT_ITEMS, BALL_OWNER_OPTIONS, DEFAULT_BALL_OWNER, LOCK_TRIGGER_DEFS, ACTIVITY_TYPES, calcBantScore, calcCurrentPhase, calcYomi, isLocked, formatCurrency, calcPushCount } from '/constants.js'
+import { PHASES, BALL_OWNER_OPTIONS, DEFAULT_BALL_OWNER, LOCK_TRIGGER_DEFS, ACTIVITY_TYPES, calcBantScore, calcCurrentPhase, calcYomi, isLocked, formatCurrency, calcPushCount } from '/constants.js'
 
 export function renderDeal(root, hash) {
   // URLパラメータから編集対象IDを取得（例: #deal?id=deal_01）
@@ -114,7 +114,7 @@ export function renderDeal(root, hash) {
           BANTスコア: <strong id="bant-score-value">0</strong> / 8　ヨミ区分: <strong id="yomi-label">-</strong>
         </div>
         <div class="bant-list">
-          ${BANT_ITEMS.map(item => `
+          ${AppState.bantItems.map(item => `
             <div class="bant-item">
               <div class="bant-key-label">${item.label}</div>
               <div class="bant-options">
@@ -187,7 +187,7 @@ export function renderDeal(root, hash) {
 
   function readBant() {
     const bant = {}
-    BANT_ITEMS.forEach(item => {
+    AppState.bantItems.forEach(item => {
       const radios = document.querySelectorAll(`input[name="bant-${item.key}"]`)
       let val = 0
       radios.forEach(r => { if (r.checked) val = parseInt(r.value) })
@@ -391,7 +391,7 @@ function autoLog(oldDeal, newDeal) {
   const oldScore = Object.values(oldDeal.bant).reduce((a, b) => a + b, 0)
   const newScore = Object.values(newDeal.bant).reduce((a, b) => a + b, 0)
   if (oldScore !== newScore) {
-    const diffs = BANT_ITEMS
+    const diffs = AppState.bantItems
       .filter(item => oldDeal.bant[item.key] !== newDeal.bant[item.key])
       .map(item => `${item.key}: ${oldDeal.bant[item.key]}→${newDeal.bant[item.key]}`)
       .join(', ')
@@ -576,7 +576,7 @@ function renderLockedView(root, deal, backDest = '#kanban', backLabel = '← カ
 
       <h3>BANTスコア <span class="locked-bant-score">${bant} / 8 点　${yomi.label}</span></h3>
       <div class="locked-bant">
-        ${BANT_ITEMS.map(item => `
+        ${AppState.bantItems.map(item => `
           <div class="locked-bant-row">
             <span class="locked-bant-key">${item.label}</span>
             <span class="locked-bant-val">${deal.bant[item.key]}点：${item.options[deal.bant[item.key]]}</span>

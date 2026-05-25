@@ -717,6 +717,11 @@ canvas { max-width: 100%; }
 .settings-control { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .settings-saved   { font-size: 13px; color: #15803d; font-weight: 600; }
 .settings-preview { margin-top: 16px; font-size: 13px; background: #f8fafc; border: 1px solid var(--color-border); border-radius: var(--radius); padding: 10px 14px; color: var(--color-muted); }
+.settings-divider { border: none; border-top: 1px solid var(--color-border); margin: 24px 0 8px; }
+.settings-save-row { margin-top: 24px; display: flex; align-items: center; gap: 12px; }
+.bant-preset-preview { margin-top: 12px; }
+.bant-preview-table { font-size: 12px; }
+.bant-preview-table th, .bant-preview-table td { padding: 6px 10px; }
 
 .action-card {
   border: 1px solid var(--color-border);

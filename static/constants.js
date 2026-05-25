@@ -8,24 +8,52 @@ export const PHASES = [
   { id: 4, label: 'Phase 4: 内定・リーガルチェック', desc: '発注意思受領・契約書確認中' },
 ]
 
-export const BANT_ITEMS = [
-  {
-    key: 'B', label: 'Budget（予算）',
-    options: ['未確認', '概算予算枠を確認', '確定予算・金額ラインを把握'],
+// 業種別 BANT ラベルプリセット。key は settings.bantPreset に保存される。
+export const BANT_PRESETS = {
+  'default': {
+    label: '標準（IT / SaaS）',
+    items: [
+      { key: 'B', label: 'Budget（予算）',      options: ['未確認', '概算予算枠を確認', '確定予算・金額ラインを把握'] },
+      { key: 'A', label: 'Authority（決裁）',   options: ['窓口担当者のみ', '起案者・影響者を把握', '最終決裁権者を特定または同席'] },
+      { key: 'N', label: 'Needs（課題）',       options: ['ふんわりした興味', '明確なペインをヒアリング済', 'RFP等として要件定義済'] },
+      { key: 'T', label: 'Timeframe（時期）',   options: ['時期未定', '大枠の時期が判明', 'デッドライン（日付）が確定'] },
+    ],
   },
-  {
-    key: 'A', label: 'Authority（決裁）',
-    options: ['窓口担当者のみ', '起案者・影響者を把握', '最終決裁権者を特定または同席'],
+  'manufacturing': {
+    label: '製造業',
+    items: [
+      { key: 'B', label: 'B: 予算確認済み',         options: ['予算未確認', '概算予算を確認', '確定予算・発注枠を把握'] },
+      { key: 'A', label: 'A: 決裁者と面談済み',     options: ['窓口担当者のみ', '購買・起案部門を把握', '最終決裁権者と直接面談済み'] },
+      { key: 'N', label: 'N: 課題・仕様を合意',     options: ['ふんわりした改善ニーズ', '生産課題・仕様を深掘り済み', '課題・仕様を書面で合意済み'] },
+      { key: 'T', label: 'T: 納期・導入時期確定',   options: ['時期未定', '大枠の導入時期が判明', '納期・稼働日（日付）が確定'] },
+    ],
   },
-  {
-    key: 'N', label: 'Needs（課題）',
-    options: ['ふんわりした興味', '明確なペインをヒアリング済', 'RFP等として要件定義済'],
+  'realestate': {
+    label: '不動産',
+    items: [
+      { key: 'B', label: 'B: 購入・賃料予算',       options: ['予算未確認', '概算予算範囲を確認', '上限予算・資金計画を確認'] },
+      { key: 'A', label: 'A: 意思決定者を特定',     options: ['問い合わせ窓口のみ', '家族・関係者の関与を把握', '最終意思決定者と直接面談'] },
+      { key: 'N', label: 'N: 条件・ニーズ合意',     options: ['漠然とした希望', '必須条件を明確化済み', '優先順位・妥協点まで合意'] },
+      { key: 'T', label: 'T: 入居・引渡し時期',     options: ['時期未定', '目安の時期が判明', '引渡し日程（日付）を確定'] },
+    ],
   },
-  {
-    key: 'T', label: 'Timeframe（時期）',
-    options: ['時期未定', '大枠の時期が判明', 'デッドライン（日付）が確定'],
+  'retail': {
+    label: '小売・流通',
+    items: [
+      { key: 'B', label: 'B: 導入予算を確認',       options: ['予算未確認', '概算予算・ROI期待を確認', '確定予算・投資承認を取得'] },
+      { key: 'A', label: 'A: 仕入・調達担当者',     options: ['現場担当者のみ', '調達・バイヤーを把握', '本部・決裁者と直接交渉'] },
+      { key: 'N', label: 'N: 課題・仕様を合意',     options: ['漠然とした問題意識', '在庫・物流課題を明確化', '導入範囲・仕様を書面合意'] },
+      { key: 'T', label: 'T: 導入・切替え時期',     options: ['時期未定', 'シーズンを考慮した時期が判明', 'カットオーバー日を確定'] },
+    ],
   },
-]
+}
+
+// プリセットキーから BANT アイテム配列を返すヘルパー
+export function getBantItems(presetKey) {
+  return (BANT_PRESETS[presetKey] ?? BANT_PRESETS['default']).items
+}
+
+export const BANT_ITEMS = BANT_PRESETS['default'].items
 
 export const BANT_MAX_SCORE = 8
 

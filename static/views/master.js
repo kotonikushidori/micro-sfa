@@ -2,7 +2,7 @@
 // 物理削除は禁止。過去の案件スナップショット（assignee_name/dept_name）は変更しない。
 import { AppState, refreshState } from '/app.js'
 import { saveUsers, saveDepts, loadUsers, loadDepts, loadLockConfig, saveLockConfig, loadSettings, saveSettings } from '/data.js'
-import { LOCK_TRIGGER_DEFS, DEFAULT_LOCK_CONFIG } from '/constants.js'
+import { LOCK_TRIGGER_DEFS, DEFAULT_LOCK_CONFIG, BANT_PRESETS } from '/constants.js'
 
 const ROLES = ['sales', 'manager', 'executive', 'admin']
 
@@ -311,8 +311,9 @@ function renderLockTab(content) {
 // ---------- システム設定タブ ----------
 
 function renderSettingsTab(content) {
-  const settings = loadSettings()
-  const fsm      = settings.fiscalStartMonth ?? 4
+  const settings   = loadSettings()
+  const fsm        = settings.fiscalStartMonth ?? 4
+  const bantPreset = settings.bantPreset ?? 'default'
 
   const months = Array.from({ length: 12 }, (_, i) => i + 1)
 
@@ -333,8 +334,6 @@ function renderSettingsTab(content) {
               return `<option value="${startMonth}" ${startMonth === fsm ? 'selected' : ''}>${m}月決算（${startMonth}月始まり）</option>`
             }).join('')}
           </select>
-          <button id="save-settings" class="btn btn-primary btn-sm" style="margin-left:12px">保存</button>
-          <span id="settings-saved" class="settings-saved hidden">✓ 保存しました</span>
         </div>
       </div>
 
@@ -342,19 +341,66 @@ function renderSettingsTab(content) {
         <strong>現在の設定：</strong>${fsm}月始まり（${fsm === 1 ? 12 : fsm - 1}月決算）
         　Q1 = ${fsm}-${((fsm + 1) % 12) || 12}月、Q2 = ${((fsm + 2) % 12) || 12}-${((fsm + 4) % 12) || 12}月、Q3 = ${((fsm + 5) % 12) || 12}-${((fsm + 7) % 12) || 12}月、Q4 = ${((fsm + 8) % 12) || 12}-${((fsm + 10) % 12) || 12}月
       </div>
+
+      <hr class="settings-divider" />
+
+      <div class="settings-row">
+        <div class="settings-label">
+          <strong>BANT ラベル（業種別プリセット）</strong>
+          <span class="settings-desc">案件入力画面の B・A・N・T の項目名と選択肢を業種に合わせて変更します。</span>
+        </div>
+        <div class="settings-control">
+          <select id="bant-preset" class="form-control-select">
+            ${Object.entries(BANT_PRESETS).map(([key, p]) =>
+              `<option value="${key}" ${key === bantPreset ? 'selected' : ''}>${p.label}</option>`
+            ).join('')}
+          </select>
+        </div>
+      </div>
+
+      <div class="bant-preset-preview" id="bant-preset-preview">
+        ${renderBantPreviewHtml(bantPreset)}
+      </div>
+
+      <div class="settings-save-row">
+        <button id="save-settings" class="btn btn-primary">設定を保存</button>
+        <span id="settings-saved" class="settings-saved hidden">✓ 保存しました</span>
+      </div>
     </section>
   `
 
+  document.getElementById('bant-preset').addEventListener('change', (e) => {
+    document.getElementById('bant-preset-preview').innerHTML = renderBantPreviewHtml(e.target.value)
+  })
+
   document.getElementById('save-settings').addEventListener('click', () => {
-    const newFsm = Number(document.getElementById('fiscal-end-month').value)
-    saveSettings({ ...loadSettings(), fiscalStartMonth: newFsm })
+    const newFsm        = Number(document.getElementById('fiscal-end-month').value)
+    const newBantPreset = document.getElementById('bant-preset').value
+    saveSettings({ ...loadSettings(), fiscalStartMonth: newFsm, bantPreset: newBantPreset })
     refreshState()
     const saved = document.getElementById('settings-saved')
     saved.classList.remove('hidden')
     setTimeout(() => saved.classList.add('hidden'), 2000)
-    // プレビュー更新のためタブ再描画
     renderSettingsTab(content)
   })
+}
+
+function renderBantPreviewHtml(presetKey) {
+  const preset = BANT_PRESETS[presetKey] ?? BANT_PRESETS['default']
+  return `
+    <table class="data-table bant-preview-table">
+      <thead><tr><th>キー</th><th>ラベル</th><th>0点</th><th>1点</th><th>2点</th></tr></thead>
+      <tbody>
+        ${preset.items.map(item => `
+          <tr>
+            <td><strong>${item.key}</strong></td>
+            <td>${item.label}</td>
+            ${item.options.map(o => `<td>${o}</td>`).join('')}
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `
 }
 
 async function sha256(message) {

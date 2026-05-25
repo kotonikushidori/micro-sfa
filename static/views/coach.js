@@ -4,7 +4,7 @@
 import { AppState } from '/app.js'
 import { loadActivities, loadTargets, saveRepTarget } from '/data.js'
 import {
-  PHASES, BANT_ITEMS,
+  PHASES,
   LOSS_PHASE_INSIGHTS, BANT_WEAKNESS_INSIGHTS,
   calcCurrentPhase, calcDaysSinceLastPhaseChange,
   calcRepCoachingData, calcTeamVelocityAvg,
