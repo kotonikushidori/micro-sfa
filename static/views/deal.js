@@ -1,7 +1,7 @@
 // deal.js: 案件入力・編集画面。Phase チェックボックスと BANT ラジオボタンで構成。
 import { AppState, refreshState } from '/app.js'
 import { createDeal, updateDeal, appendActivity, loadActivitiesByDeal } from '/data.js'
-import { PHASES, BALL_OWNER_OPTIONS, DEFAULT_BALL_OWNER, LOCK_TRIGGER_DEFS, ACTIVITY_TYPES, calcBantScore, calcCurrentPhase, calcYomi, isLocked, formatCurrency, calcPushCount } from '/constants.js'
+import { BALL_OWNER_OPTIONS, DEFAULT_BALL_OWNER, LOCK_TRIGGER_DEFS, ACTIVITY_TYPES, calcBantScore, calcCurrentPhase, calcYomi, isLocked, formatCurrency, calcPushCount } from '/constants.js'
 
 export function renderDeal(root, hash) {
   // URLパラメータから編集対象IDを取得（例: #deal?id=deal_01）
@@ -94,7 +94,7 @@ export function renderDeal(root, hash) {
         <h3>Phase（事実チェック）</h3>
         <p class="section-desc">完了した事実のみチェックしてください。自己申告的な「進行中」はチェック不可。</p>
         <div class="phase-list" id="phase-list">
-          ${PHASES.map((p, i) => `
+          ${AppState.phaseItems.map((p, i) => `
             <label class="phase-item ${(deal?.phases[i] ?? false) ? 'checked' : ''}">
               <input type="checkbox" name="phase" data-index="${i}"
                 ${(deal?.phases[i] ?? false) ? 'checked' : ''} />
@@ -179,7 +179,7 @@ export function renderDeal(root, hash) {
   }
 
   function readPhases() {
-    return PHASES.map((_, i) => {
+    return AppState.phaseItems.map((_, i) => {
       const cb = document.querySelector(`input[name="phase"][data-index="${i}"]`)
       return cb ? cb.checked : false
     })
@@ -561,7 +561,7 @@ function renderLockedView(root, deal, backDest = '#kanban', backLabel = '← カ
 
       <h3>Phase 進捗</h3>
       <div class="locked-phases">
-        ${PHASES.map((p, i) => `
+        ${AppState.phaseItems.map((p, i) => `
           <div class="locked-phase ${deal.phases[i] ? 'done' : ''}">
             <span class="phase-check">${deal.phases[i] ? '✓' : '○'}</span>
             <div>

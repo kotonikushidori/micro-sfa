@@ -1,6 +1,6 @@
 // kanban.js: Phase別カンバン画面。警告バッジ・部署/担当者フィルター付き。
 import { AppState } from '/app.js'
-import { PHASES, BALL_OWNER_OPTIONS, DEFAULT_BALL_OWNER, calcCurrentPhase, calcBantScore, isWarning, formatCurrency, getFiscalQuarterKey } from '/constants.js'
+import { BALL_OWNER_OPTIONS, DEFAULT_BALL_OWNER, calcCurrentPhase, calcBantScore, isWarning, formatCurrency, getFiscalQuarterKey } from '/constants.js'
 import { loadTargets } from '/data.js'
 
 export function renderKanban(root) {
@@ -79,7 +79,7 @@ function renderBoard(deals, { deptId = '', userId = '' } = {}) {
   // カラム定義：Phase 1〜4 + 受注済み
   const wonDeals = deals.filter(d => d.isWon)
   const columns = [
-    ...PHASES.map(p => ({
+    ...AppState.phaseItems.map(p => ({
       id:     `phase_${p.id}`,
       label:  p.label,
       deals:  deals.filter(d => !d.isWon && calcCurrentPhase(d) === p.id),

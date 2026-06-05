@@ -1,0 +1,15 @@
+services:
+  app:
+    build:
+      context: .
+      target: development
+    ports:
+      - "8989:8080"
+    volumes:
+      - .:/app
+      - go-mod-cache:/go/pkg/mod
+    environment:
+      PORT: "8080"
+
+volumes:
+  go-mod-cache:

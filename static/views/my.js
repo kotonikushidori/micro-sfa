@@ -2,7 +2,7 @@
 // Phase × BANT の状態からネクストアクションを自動生成するのがこの画面の核心。
 import { AppState } from '/app.js'
 import { loadActivities, loadTargets } from '/data.js'
-import { PHASES, BALL_OWNER_OPTIONS, DEFAULT_BALL_OWNER, calcCurrentPhase, calcBantScore, calcExpectedValue, calcYomi, isWarning, formatCurrency, calcRepCoachingData, calcTeamVelocityAvg, LOSS_PHASE_INSIGHTS, BANT_WEAKNESS_INSIGHTS, calcPushCount, getFiscalQuarterKey, getFiscalQuarterRange } from '/constants.js'
+import { BALL_OWNER_OPTIONS, DEFAULT_BALL_OWNER, calcCurrentPhase, calcBantScore, calcExpectedValue, calcYomi, isWarning, formatCurrency, calcRepCoachingData, calcTeamVelocityAvg, LOSS_PHASE_INSIGHTS, BANT_WEAKNESS_INSIGHTS, calcPushCount, getFiscalQuarterKey, getFiscalQuarterRange } from '/constants.js'
 
 // Phase ごとの「次に進むための条件」テキスト
 const NEXT_PHASE_ACTION = [

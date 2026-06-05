@@ -1,12 +1,52 @@
 // constants.js: ドメイン定数。全ファイルからインポートして使う。
 // ここを変更するだけで全画面に反映される。
 
-export const PHASES = [
-  { id: 1, label: 'Phase 1: ヒアリング完了',         desc: '議事録共有・課題合意済み' },
-  { id: 2, label: 'Phase 2: 提案・見積提示',         desc: '見積書送付・受領確認済み' },
-  { id: 3, label: 'Phase 3: 決裁会議日程確定',       desc: '決裁権者出席の会議日時確定' },
-  { id: 4, label: 'Phase 4: 内定・リーガルチェック', desc: '発注意思受領・契約書確認中' },
-]
+// 業種別フェーズプリセット。key は settings.phasePreset に保存される。
+// 各プリセットは必ず4フェーズ（deal.phases は4要素のbool配列）。
+export const PHASE_PRESETS = {
+  'default': {
+    label: 'IT・SaaS標準',
+    phases: [
+      { id: 1, label: 'Phase 1: ヒアリング完了',         desc: '議事録共有・課題合意済み' },
+      { id: 2, label: 'Phase 2: 提案・見積提示',         desc: '見積書送付・受領確認済み' },
+      { id: 3, label: 'Phase 3: 決裁会議日程確定',       desc: '決裁権者出席の会議日時確定' },
+      { id: 4, label: 'Phase 4: 内定・リーガルチェック', desc: '発注意思受領・契約書確認中' },
+    ],
+  },
+  'manufacturing': {
+    label: '製造業・設備販売',
+    phases: [
+      { id: 1, label: 'Phase 1: ヒアリング',   desc: '課題・要件のヒアリング済み' },
+      { id: 2, label: 'Phase 2: 仕様確定',     desc: '技術仕様・要件を書面で合意済み' },
+      { id: 3, label: 'Phase 3: 見積提示',     desc: '見積書提出・金額ライン確認済み' },
+      { id: 4, label: 'Phase 4: 社内稟議',     desc: '顧客社内の稟議・発注承認プロセス中' },
+    ],
+  },
+  'agency': {
+    label: '代理店・卸売り',
+    phases: [
+      { id: 1, label: 'Phase 1: 新規開拓',     desc: '初回接触・ニーズ確認済み' },
+      { id: 2, label: 'Phase 2: サンプル提供', desc: 'サンプル・試供品を提供済み' },
+      { id: 3, label: 'Phase 3: 条件交渉',     desc: '価格・数量・納期条件を交渉中' },
+      { id: 4, label: 'Phase 4: 契約',         desc: '契約書・発注書の確認・締結中' },
+    ],
+  },
+  'construction': {
+    label: '建設・工事',
+    phases: [
+      { id: 1, label: 'Phase 1: 引き合い',     desc: '引き合い受付・要件確認済み' },
+      { id: 2, label: 'Phase 2: 現地調査',     desc: '現地調査・仕様確認完了' },
+      { id: 3, label: 'Phase 3: 見積',         desc: '見積書提出・金額確認済み' },
+      { id: 4, label: 'Phase 4: 指名',         desc: '発注先として指名・内示受領済み' },
+    ],
+  },
+}
+
+export function getPhaseItems(presetKey) {
+  return (PHASE_PRESETS[presetKey] ?? PHASE_PRESETS['default']).phases
+}
+
+export const PHASES = PHASE_PRESETS['default'].phases
 
 // 業種別 BANT ラベルプリセット。key は settings.bantPreset に保存される。
 export const BANT_PRESETS = {

@@ -2,7 +2,7 @@
 // 各画面モジュールは views/ 以下に分離し、ここでは組み立てのみ行う。
 
 import { loadCurrentUser, saveCurrentUser, clearCurrentUser, loadDeals, loadUsers, loadDepts, loadLockConfig, loadSettings, initDemoData } from '/data.js'
-import { DEFAULT_LOCK_CONFIG, getBantItems } from '/constants.js'
+import { DEFAULT_LOCK_CONFIG, getBantItems, getPhaseItems } from '/constants.js'
 import { renderLogin } from '/views/login.js'
 import { renderMy } from '/views/my.js'
 import { renderDeal } from '/views/deal.js'
@@ -25,6 +25,7 @@ export const AppState = {
   lockConfig: DEFAULT_LOCK_CONFIG,
   settings: { fiscalStartMonth: 4 },
   bantItems: getBantItems('default'),
+  phaseItems: getPhaseItems('default'),
 }
 
 // ロールごとのデフォルト画面とナビリンク定義
@@ -61,7 +62,8 @@ export function refreshState() {
   AppState.depts = loadDepts()
   AppState.lockConfig = loadLockConfig() ?? DEFAULT_LOCK_CONFIG
   AppState.settings = loadSettings()
-  AppState.bantItems = getBantItems(AppState.settings.bantPreset)
+  AppState.bantItems  = getBantItems(AppState.settings.bantPreset)
+  AppState.phaseItems = getPhaseItems(AppState.settings.phasePreset)
 }
 
 // ログイン処理（login.js から呼ばれる）

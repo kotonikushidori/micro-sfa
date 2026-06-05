@@ -1,0 +1,6 @@
+.git
+.claude
+.air.toml
+docker-compose*.yml
+Dockerfile
+README.md

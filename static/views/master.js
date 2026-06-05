@@ -2,7 +2,7 @@
 // 物理削除は禁止。過去の案件スナップショット（assignee_name/dept_name）は変更しない。
 import { AppState, refreshState } from '/app.js'
 import { saveUsers, saveDepts, loadUsers, loadDepts, loadLockConfig, saveLockConfig, loadSettings, saveSettings } from '/data.js'
-import { LOCK_TRIGGER_DEFS, DEFAULT_LOCK_CONFIG, BANT_PRESETS } from '/constants.js'
+import { LOCK_TRIGGER_DEFS, DEFAULT_LOCK_CONFIG, BANT_PRESETS, PHASE_PRESETS } from '/constants.js'
 
 const ROLES = ['sales', 'manager', 'executive', 'admin']
 
@@ -311,9 +311,10 @@ function renderLockTab(content) {
 // ---------- システム設定タブ ----------
 
 function renderSettingsTab(content) {
-  const settings   = loadSettings()
-  const fsm        = settings.fiscalStartMonth ?? 4
-  const bantPreset = settings.bantPreset ?? 'default'
+  const settings    = loadSettings()
+  const fsm         = settings.fiscalStartMonth ?? 4
+  const bantPreset  = settings.bantPreset ?? 'default'
+  const phasePreset = settings.phasePreset ?? 'default'
 
   const months = Array.from({ length: 12 }, (_, i) => i + 1)
 
@@ -362,6 +363,26 @@ function renderSettingsTab(content) {
         ${renderBantPreviewHtml(bantPreset)}
       </div>
 
+      <hr class="settings-divider" />
+
+      <div class="settings-row">
+        <div class="settings-label">
+          <strong>フェーズ定義（業種別プリセット）</strong>
+          <span class="settings-desc">カンバン・案件入力のPhase名を業種に合わせて変更します。既存案件のチェック状態はそのまま引き継がれます。</span>
+        </div>
+        <div class="settings-control">
+          <select id="phase-preset" class="form-control-select">
+            ${Object.entries(PHASE_PRESETS).map(([key, p]) =>
+              `<option value="${key}" ${key === phasePreset ? 'selected' : ''}>${p.label}</option>`
+            ).join('')}
+          </select>
+        </div>
+      </div>
+
+      <div class="bant-preset-preview" id="phase-preset-preview">
+        ${renderPhasePreviewHtml(phasePreset)}
+      </div>
+
       <div class="settings-save-row">
         <button id="save-settings" class="btn btn-primary">設定を保存</button>
         <span id="settings-saved" class="settings-saved hidden">✓ 保存しました</span>
@@ -373,10 +394,15 @@ function renderSettingsTab(content) {
     document.getElementById('bant-preset-preview').innerHTML = renderBantPreviewHtml(e.target.value)
   })
 
+  document.getElementById('phase-preset').addEventListener('change', (e) => {
+    document.getElementById('phase-preset-preview').innerHTML = renderPhasePreviewHtml(e.target.value)
+  })
+
   document.getElementById('save-settings').addEventListener('click', () => {
-    const newFsm        = Number(document.getElementById('fiscal-end-month').value)
-    const newBantPreset = document.getElementById('bant-preset').value
-    saveSettings({ ...loadSettings(), fiscalStartMonth: newFsm, bantPreset: newBantPreset })
+    const newFsm         = Number(document.getElementById('fiscal-end-month').value)
+    const newBantPreset  = document.getElementById('bant-preset').value
+    const newPhasePreset = document.getElementById('phase-preset').value
+    saveSettings({ ...loadSettings(), fiscalStartMonth: newFsm, bantPreset: newBantPreset, phasePreset: newPhasePreset })
     refreshState()
     const saved = document.getElementById('settings-saved')
     saved.classList.remove('hidden')
@@ -396,6 +422,24 @@ function renderBantPreviewHtml(presetKey) {
             <td><strong>${item.key}</strong></td>
             <td>${item.label}</td>
             ${item.options.map(o => `<td>${o}</td>`).join('')}
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `
+}
+
+function renderPhasePreviewHtml(presetKey) {
+  const preset = PHASE_PRESETS[presetKey] ?? PHASE_PRESETS['default']
+  return `
+    <table class="data-table bant-preview-table">
+      <thead><tr><th>Phase</th><th>ラベル</th><th>達成条件</th></tr></thead>
+      <tbody>
+        ${preset.phases.map(p => `
+          <tr>
+            <td><strong>${p.id}</strong></td>
+            <td>${p.label}</td>
+            <td>${p.desc}</td>
           </tr>
         `).join('')}
       </tbody>
