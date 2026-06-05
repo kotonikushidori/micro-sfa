@@ -164,8 +164,7 @@ const DEMO_PASSWORD_HASH = '0ead2060b65992dca4769af601a1b3a35ef38cfad2c2c465bb16
 
 export function initDemoData() {
   // ユーザーが独自に追加したデータがある場合はスキップ
-  const users = loadUsers()
-  const hasCustomData = users.some(u => !u.id.startsWith('user_'))
+  const hasCustomData = loadUsers().some(u => !u.id.startsWith('user_'))
   if (hasCustomData) return
 
   // デモデータを毎回リセット（常に最新のデモ状態を保証）
