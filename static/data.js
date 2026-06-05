@@ -163,8 +163,17 @@ export function clearCurrentUser() {
 const DEMO_PASSWORD_HASH = '0ead2060b65992dca4769af601a1b3a35ef38cfad2c2c465bb160ea764157c5d'
 
 export function initDemoData() {
-  // 既にデータが存在する場合は投入しない
-  if (loadDepts().length > 0) return
+  // ユーザーが独自に追加したデータがある場合はスキップ
+  const users = loadUsers()
+  const hasCustomData = users.some(u => !u.id.startsWith('user_'))
+  if (hasCustomData) return
+
+  // デモデータを毎回リセット（常に最新のデモ状態を保証）
+  localStorage.removeItem(STORAGE_KEYS.DEALS)
+  localStorage.removeItem(STORAGE_KEYS.USERS)
+  localStorage.removeItem(STORAGE_KEYS.DEPTS)
+  localStorage.removeItem(STORAGE_KEYS.ACTIVITIES)
+  localStorage.removeItem(STORAGE_KEYS.TARGETS)
 
   const now = new Date().toISOString()
 
