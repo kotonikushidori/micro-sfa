@@ -185,6 +185,48 @@ sfa/
 
 ---
 
+## Docker での本番デプロイ
+
+nginx-proxy（リバースプロキシ）と組み合わせて SSL 対応する構成。
+
+### 前提
+
+- `proxy-net` 外部ネットワークが作成済み（`docker network create proxy-net`）
+- `nginx-proxy/` が起動済み（証明書取得・nginx 稼働中）
+
+### 手順
+
+```bash
+# リポジトリをサーバーに展開
+git clone https://github.com/kotonikushidori/micro-sfa
+cd micro-sfa
+
+# 本番イメージをビルドして起動
+docker compose -f docker-compose.prod.yml build
+docker compose -f docker-compose.prod.yml up -d
+```
+
+### 更新デプロイ
+
+```bash
+git pull origin main
+docker compose -f docker-compose.prod.yml build
+docker compose -f docker-compose.prod.yml up -d
+```
+
+### 開発環境（ローカル）
+
+```bash
+# ホットリロード付きで起動（air が自動で Go を再ビルド）
+docker compose up
+
+# または Go を直接実行
+go run main.go
+# → http://localhost:8080
+```
+
+---
+
 ## Render へのデプロイ
 
 1. GitHubリポジトリを作成してpush
