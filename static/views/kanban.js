@@ -33,7 +33,7 @@ export function renderKanban(root) {
           </select>
         </div>
       ` : ''}
-      <a href="#deal" class="btn btn-primary">+ 案件作成</a>
+      <a href="#deal" class="btn btn-primary">+ 案件を登録する</a>
     </div>
     <div id="kanban-board" class="kanban-board"></div>
   `
