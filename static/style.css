@@ -1100,6 +1100,12 @@ canvas { max-width: 100%; }
 .my-trend-insight { font-size: 12px; color: var(--color-muted); margin-top: 4px; line-height: 1.5; }
 .my-trend-ok { font-size: 13px; color: var(--color-success); padding: 12px; text-align: center; }
 
+/* ---------- 担当案件一覧ヘッダー ---------- */
+.deal-list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.deal-list-header h3 { margin: 0; }
+.btn-text-toggle { background: none; border: none; font-size: 12px; color: var(--color-primary); cursor: pointer; padding: 2px 0; }
+.btn-text-toggle:hover { text-decoration: underline; }
+
 /* ---------- アコーディオン（自分の傾向） ---------- */
 .trend-accordion { padding: 0; }
 .trend-summary {

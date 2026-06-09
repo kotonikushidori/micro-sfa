@@ -141,7 +141,10 @@ export function renderMy(root) {
 
     <!-- 担当案件一覧 -->
     <section class="card">
-      <h3>担当案件一覧</h3>
+      <div class="deal-list-header">
+        <h3>担当案件一覧</h3>
+        <button id="deal-detail-toggle" class="btn-text-toggle">詳細を表示</button>
+      </div>
       <div class="deal-tabs">
         <button class="tab-btn active" data-deal-tab="active">アクティブ <span class="tab-count">${active.length}</span></button>
         <button class="tab-btn" data-deal-tab="won">受注済み <span class="tab-count">${won.length}</span></button>
@@ -149,7 +152,7 @@ export function renderMy(root) {
         <button class="tab-btn" data-deal-tab="all">すべて <span class="tab-count">${deals.length}</span></button>
       </div>
       <div id="deal-table-wrap">
-        ${renderDealRows(active, activities, today)}
+        ${renderDealRows(active, activities, today, false)}
       </div>
     </section>
   `
@@ -162,23 +165,43 @@ export function renderMy(root) {
     document.getElementById('action-more-btn').remove()
   })
 
+  // 担当案件一覧：詳細トグル
+  let detailMode = false
+  const toggleBtn = document.getElementById('deal-detail-toggle')
+  const getCurrentTabDeals = () => {
+    const active = root.querySelector('[data-deal-tab].active')?.dataset.dealTab ?? 'active'
+    return active === 'active' ? activeDls : active === 'won' ? wonDls : active === 'lost' ? lostDls : deals
+  }
+  // active/won/lost/deals をクロージャで参照できるよう名前を変える
+  const activeDls = active, wonDls = won, lostDls = lost
+  toggleBtn?.addEventListener('click', () => {
+    detailMode = !detailMode
+    toggleBtn.textContent = detailMode ? '簡易表示' : '詳細を表示'
+    document.getElementById('deal-table-wrap').innerHTML =
+      renderDealRows(getCurrentTabDeals(), activities, today, detailMode)
+  })
+
   // 担当案件一覧タブ切り替え
   root.querySelectorAll('[data-deal-tab]').forEach(btn => {
     btn.addEventListener('click', () => {
       root.querySelectorAll('[data-deal-tab]').forEach(b => b.classList.toggle('active', b === btn))
       const tab      = btn.dataset.dealTab
       const filtered = tab === 'active' ? active : tab === 'won' ? won : tab === 'lost' ? lost : deals
-      document.getElementById('deal-table-wrap').innerHTML = renderDealRows(filtered, activities, today)
+      document.getElementById('deal-table-wrap').innerHTML = renderDealRows(filtered, activities, today, detailMode)
     })
   })
 }
 
-function renderDealRows(filteredDeals, activities, today) {
+function renderDealRows(filteredDeals, activities, today, detailed = false) {
   if (filteredDeals.length === 0) return '<p class="empty-state">該当する案件はありません</p>'
   return `
     <table class="data-table">
       <thead><tr>
-        <th>案件名</th><th>Phase</th><th>ヨミ</th><th>BANT</th><th>金額</th><th>期待値</th><th>想定受注日</th><th>期ずれ</th><th></th>
+        <th>案件名</th><th>Phase</th><th>ヨミ</th>
+        ${detailed ? '<th>BANT</th><th>金額</th><th>期待値</th>' : ''}
+        <th>想定受注日</th>
+        ${detailed ? '<th>期ずれ</th>' : ''}
+        <th></th>
       </tr></thead>
       <tbody>
         ${filteredDeals.map(d => {
@@ -195,6 +218,7 @@ function renderDealRows(filteredDeals, activities, today) {
               <td>${d.name} ${status}</td>
               <td>${d.isWon || d.isLost ? '-' : `Phase ${phase}`}</td>
               <td><span class="yomi-tag yomi-${yomi.key}">${yomi.label}</span></td>
+              ${detailed ? `
               <td>
                 <div class="mini-bant-bar">
                   <div class="mini-bant-fill" style="width:${Math.round(bant/8*100)}%;background:${bant>=6?'#22c55e':bant>=4?'#f59e0b':'#ef4444'}"></div>
@@ -203,8 +227,9 @@ function renderDealRows(filteredDeals, activities, today) {
               </td>
               <td>${formatCurrency(d.amount)}</td>
               <td>${d.isWon || d.isLost ? '-' : formatCurrency(calcExpectedValue(d))}</td>
+              ` : ''}
               <td class="${closeCls}">${d.closeDate}${days >= 0 && days <= 30 && !d.isWon && !d.isLost ? ` <span class="days-left">残${days}日</span>` : ''}</td>
-              <td>${pushCount > 0 ? `<span class="push-badge push-badge--${pushCount >= 3 ? 'danger' : 'warn'}">${pushCount}回</span>` : '-'}</td>
+              ${detailed ? `<td>${pushCount > 0 ? `<span class="push-badge push-badge--${pushCount >= 3 ? 'danger' : 'warn'}">${pushCount}回</span>` : '-'}</td>` : ''}
               <td><a href="#deal?id=${d.id}&from=my" class="btn btn-sm">編集</a></td>
             </tr>
           `
