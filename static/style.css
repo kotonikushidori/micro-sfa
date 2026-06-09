@@ -739,7 +739,12 @@ canvas { max-width: 100%; }
 .action-deal-name:hover { text-decoration: underline; color: var(--color-primary); }
 
 .action-card-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.tag-phase  { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: #dbeafe; color: #1e40af; font-weight: 600; }
+.tag-phase     { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+.tag-phase--0  { background: #f1f5f9; color: #64748b; }
+.tag-phase--1  { background: #dbeafe; color: #1e40af; }
+.tag-phase--2  { background: #ede9fe; color: #5b21b6; }
+.tag-phase--3  { background: #fef3c7; color: #92400e; }
+.tag-phase--4  { background: #dcfce7; color: #166534; }
 .tag-bant   { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: var(--color-bg); border: 1px solid var(--color-border); }
 .tag-amount { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: var(--color-bg); border: 1px solid var(--color-border); font-weight: 600; }
 .tag-deadline { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: #fee2e2; color: #991b1b; font-weight: 600; }

@@ -339,7 +339,7 @@ function renderWaitingCard(deal) {
           <a href="#deal?id=${deal.id}&from=my" class="action-deal-name">${deal.name}</a>
         </div>
         <div class="action-card-meta">
-          <span class="tag-phase">Phase ${phase}</span>
+          <span class="tag-phase tag-phase--${phase}">Phase ${phase}</span>
           <span class="yomi-tag yomi-${yomi.key}">${yomi.label}</span>
           <span class="tag-bant">BANT ${bant}/8</span>
           <span class="tag-amount">${formatCurrency(deal.amount)}</span>
@@ -367,7 +367,7 @@ function renderActionCard(deal) {
           <a href="#deal?id=${deal.id}&from=my" class="action-deal-name">${deal.name}</a>
         </div>
         <div class="action-card-meta">
-          <span class="tag-phase">Phase ${phase}</span>
+          <span class="tag-phase tag-phase--${phase}">Phase ${phase}</span>
           <span class="yomi-tag yomi-${yomi.key}">${yomi.label}</span>
           <span class="tag-bant">BANT ${bant}/8</span>
           <span class="tag-amount">${formatCurrency(deal.amount)}</span>
