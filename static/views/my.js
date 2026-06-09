@@ -133,6 +133,7 @@ export function renderMy(root) {
       `}
     </div>
 
+    <div class="my-narrow">
     <!-- 今すぐやること（ボールが自分にある案件） -->
     ${renderActionSection(sorted)}
 
@@ -155,6 +156,7 @@ export function renderMy(root) {
         ${renderDealRows(active, activities, today, false)}
       </div>
     </section>
+    </div>
   `
 
   // 今すぐやること「他N件表示」
