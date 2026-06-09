@@ -21,7 +21,7 @@ const BANT_ACTION = {
   T: '導入時期・デッドラインを確認してください（Timeframe 不足）',
 }
 
-const ACTION_LIMIT = 7
+const ACTION_LIMIT = 4
 
 // 案件の優先度スコア（高いほど先にアクションが必要）
 function urgencyScore(deal) {
