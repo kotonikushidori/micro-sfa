@@ -1101,7 +1101,7 @@ canvas { max-width: 100%; }
 .my-trend-ok { font-size: 13px; color: var(--color-success); padding: 12px; text-align: center; }
 
 /* ---------- マイページ：リスト系の幅制限 ---------- */
-.my-narrow { max-width: 800px; }
+.my-narrow { max-width: 800px; margin-left: auto; margin-right: auto; }
 
 /* ---------- 担当案件一覧ヘッダー ---------- */
 .deal-list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
