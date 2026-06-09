@@ -209,9 +209,7 @@ docker compose -f docker-compose.prod.yml up -d
 ### 更新デプロイ
 
 ```bash
-git pull origin main
-docker compose -f docker-compose.prod.yml build
-docker compose -f docker-compose.prod.yml up -d
+git pull origin main && docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 ### 開発環境（ローカル）
