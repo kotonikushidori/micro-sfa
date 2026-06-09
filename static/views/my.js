@@ -281,9 +281,11 @@ function renderMyTrend(myDeals) {
   const hasAnyInsight = lossInsight || bantItems.length > 0 || slowPhases.length > 0
 
   return `
-    <section class="card">
-      <h3>自分の傾向</h3>
-      <p class="coach-desc">過去の案件データから自動算出しています。マネージャーも同じデータを参照しています。</p>
+    <details class="card trend-accordion">
+      <summary class="trend-summary">
+        <h3>自分の傾向</h3>
+      </summary>
+      <p class="coach-desc" style="margin-top:12px">過去の案件データから自動算出しています。マネージャーも同じデータを参照しています。</p>
       ${!hasAnyInsight
         ? `<p class="my-trend-ok">✓ 目立った傾向パターンはありません</p>`
         : `<div class="diagnostic-insights">
@@ -292,7 +294,7 @@ function renderMyTrend(myDeals) {
             ${slowPhases.map(({ label, v, a }) => `<li class="d-insight d-insight--velocity">⏱ ${label} が平均 ${v}日（チーム平均 ${a}日）— 進行が遅い傾向があります</li>`).join('')}
           </div>`
       }
-    </section>
+    </details>
   `
 }
 

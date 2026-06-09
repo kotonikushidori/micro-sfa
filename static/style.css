@@ -1100,6 +1100,23 @@ canvas { max-width: 100%; }
 .my-trend-insight { font-size: 12px; color: var(--color-muted); margin-top: 4px; line-height: 1.5; }
 .my-trend-ok { font-size: 13px; color: var(--color-success); padding: 12px; text-align: center; }
 
+/* ---------- アコーディオン（自分の傾向） ---------- */
+.trend-accordion { padding: 0; }
+.trend-summary {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; cursor: pointer; list-style: none; user-select: none;
+}
+.trend-summary::-webkit-details-marker { display: none; }
+.trend-summary h3 { margin: 0; }
+.trend-summary::after {
+  content: '▶'; font-size: 11px; color: var(--color-muted);
+  transition: transform 0.2s;
+}
+.trend-accordion[open] .trend-summary::after { transform: rotate(90deg); }
+.trend-accordion[open] .coach-desc,
+.trend-accordion[open] .my-trend-ok,
+.trend-accordion[open] .diagnostic-insights { padding: 0 20px 16px; }
+
 /* ---------- ユーティリティ ---------- */
 .text-muted  { color: var(--color-muted); }
 .text-danger { color: var(--color-danger); }
