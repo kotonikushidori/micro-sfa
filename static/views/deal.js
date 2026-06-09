@@ -92,7 +92,7 @@ export function renderDeal(root, hash) {
 
       <section class="form-section">
         <h3>Phase（事実チェック）</h3>
-        <p class="section-desc">完了した事実のみチェックしてください。自己申告的な「進行中」はチェック不可。</p>
+        <p class="section-desc">完了した事実のみチェックしてください。自己申告的な「進行中」はチェック不可。Phase と下のBANTスコアを組み合わせて、ヨミ区分（A/B/C）が自動で決まります。</p>
         <div class="phase-list" id="phase-list">
           ${AppState.phaseItems.map((p, i) => `
             <label class="phase-item ${(deal?.phases[i] ?? false) ? 'checked' : ''}">
@@ -109,7 +109,7 @@ export function renderDeal(root, hash) {
 
       <section class="form-section">
         <h3>BANTスコア（客観指標）</h3>
-        <p class="section-desc">主観を排除し、確認できた事実だけを選択してください。</p>
+        <p class="section-desc">主観を排除し、確認できた事実だけを選択してください。スコアが上がるほどヨミ区分が上がり、マネージャーへの報告数値に直結します。</p>
         <div id="bant-score-display" class="bant-score-display">
           BANTスコア: <strong id="bant-score-value">0</strong> / 8　ヨミ区分: <strong id="yomi-label">-</strong>
         </div>
