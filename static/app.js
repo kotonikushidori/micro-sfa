@@ -30,7 +30,7 @@ export const AppState = {
 
 // ロールごとのデフォルト画面とナビリンク定義
 const ROLE_CONFIG = {
-  sales:     { defaultHash: '#my',        nav: ['#my', '#deal', '#kanban'] },
+  sales:     { defaultHash: '#my',        nav: ['#my'] },
   manager:   { defaultHash: '#kanban',    nav: ['#my', '#deal', '#kanban', '#forecast', '#dashboard', '#coach'] },
   executive: { defaultHash: '#dashboard', nav: ['#my', '#dashboard'] },
   admin:     { defaultHash: '#master',    nav: ['#kanban', '#forecast', '#dashboard', '#master'] },
