@@ -30,10 +30,10 @@ export const AppState = {
 
 // ロールごとのデフォルト画面とナビリンク定義
 const ROLE_CONFIG = {
-  sales:     { defaultHash: '#my',        nav: ['#my'] },
-  manager:   { defaultHash: '#kanban',    nav: ['#my', '#kanban', '#forecast', '#dashboard', '#coach'] },
-  executive: { defaultHash: '#dashboard', nav: ['#my', '#dashboard'] },
-  admin:     { defaultHash: '#master',    nav: ['#kanban', '#forecast', '#dashboard', '#master'] },
+  sales:     { defaultHash: '#my',        nav: ['#my'],                                                 allow: ['#deal'] },
+  manager:   { defaultHash: '#kanban',    nav: ['#my', '#kanban', '#forecast', '#dashboard', '#coach'], allow: ['#deal'] },
+  executive: { defaultHash: '#dashboard', nav: ['#my', '#dashboard'],                                   allow: [] },
+  admin:     { defaultHash: '#master',    nav: ['#kanban', '#forecast', '#dashboard', '#master'],       allow: ['#deal'] },
 }
 
 const NAV_LABELS = {
@@ -51,8 +51,7 @@ function canAccess(role, hash) {
   const base = hash.split('?')[0]  // クエリ部分を除去
   const config = ROLE_CONFIG[role]
   if (!config) return false
-  // #deal は salesが自分の案件のみ、managerは全件 → どちらもアクセス許可
-  return config.nav.includes(base)
+  return config.nav.includes(base) || (config.allow ?? []).includes(base)
 }
 
 // グローバル状態を最新のlocalStorageから再読み込み
