@@ -49,6 +49,7 @@ export function renderCoach(root) {
     document.getElementById('coach-content').innerHTML = `
       ${renderRepTargetSection(deals, deptId, currentQk)}
       ${renderFunnel(deals)}
+      ${renderDiscountSection(deals)}
       ${renderVelocityMatrix(repData, teamAvg)}
       ${renderDiagnosticCards(repData, teamAvg, repPushStats)}
       ${renderStagnant(deals, activities)}
@@ -187,7 +188,73 @@ function attachRepInputListeners(quarterKey, deals, deptId) {
   })
 }
 
-// ① チームファネル
+// ① 担当者別値引き状況
+function renderDiscountSection(deals) {
+  const active = deals.filter(d => !d.isWon && !d.isLost)
+
+  const repMap = {}
+  active.forEach(d => {
+    if (!repMap[d.assignee_id]) {
+      repMap[d.assignee_id] = { name: d.assignee_name, dept: d.dept_name, total: 0, discounted: [] }
+    }
+    repMap[d.assignee_id].total++
+    if (d.amountHistory && d.amountHistory.length > 1) {
+      repMap[d.assignee_id].discounted.push(d)
+    }
+  })
+
+  const reps = Object.values(repMap).filter(r => r.total > 0)
+  if (!reps.some(r => r.discounted.length > 0)) return ''
+
+  const avgRate = deals => {
+    if (!deals.length) return 0
+    const sum = deals.reduce((s, d) => {
+      const orig = d.amountHistory[0].amount
+      return s + (orig > 0 ? (orig - d.amount) / orig * 100 : 0)
+    }, 0)
+    return Math.round(sum / deals.length)
+  }
+
+  const maxRate = deals => {
+    if (!deals.length) return 0
+    return Math.max(...deals.map(d => {
+      const orig = d.amountHistory[0].amount
+      return orig > 0 ? Math.round((orig - d.amount) / orig * 100) : 0
+    }))
+  }
+
+  const sorted = [...reps].sort((a, b) => avgRate(b.discounted) - avgRate(a.discounted))
+
+  return `
+    <section class="card coach-section">
+      <h3>担当者別値引き状況</h3>
+      <p class="coach-desc">当初登録金額から変更があった案件を集計しています。平均値引き率が高い担当者を優先的にフォローしてください。</p>
+      <table class="data-table">
+        <thead><tr>
+          <th>担当者</th><th>部署</th><th>値引き件数</th><th>平均値引き率</th><th>最大値引き率</th>
+        </tr></thead>
+        <tbody>
+          ${sorted.map(r => {
+            const avg  = avgRate(r.discounted)
+            const max  = maxRate(r.discounted)
+            const warn = avg >= 10
+            return `
+              <tr ${warn ? 'class="row-warning"' : ''}>
+                <td>${r.name}</td>
+                <td class="text-muted">${r.dept}</td>
+                <td>${r.discounted.length} / ${r.total}</td>
+                <td>${r.discounted.length > 0 ? `<strong class="${warn ? 'discount-rate--high' : ''}">${avg}%</strong>` : '-'}</td>
+                <td class="text-muted">${r.discounted.length > 0 ? `${max}%` : '-'}</td>
+              </tr>
+            `
+          }).join('')}
+        </tbody>
+      </table>
+    </section>
+  `
+}
+
+// ② チームファネル
 function renderFunnel(deals) {
   const active = deals.filter(d => !d.isWon && !d.isLost)
   const lost   = deals.filter(d => d.isLost)

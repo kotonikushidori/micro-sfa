@@ -293,10 +293,24 @@ export function renderDeal(root, hash) {
     const assigneeUser = AppState.users.find(u => u.id === assigneeId)
     const deptObj      = AppState.depts.find(d => d.id === deptId)
 
+    const newAmount = Number(document.getElementById('deal-amount').value)
+    const prevHistory = deal?.amountHistory ?? []
+    let amountHistory
+    if (!isEdit) {
+      amountHistory = [{ amount: newAmount, changedAt: now }]
+    } else if (newAmount !== deal.amount) {
+      const base = prevHistory.length > 0
+        ? prevHistory
+        : [{ amount: deal.amount, changedAt: deal.createdAt }]
+      amountHistory = [...base, { amount: newAmount, changedAt: now }]
+    } else {
+      amountHistory = prevHistory
+    }
+
     const payload = {
       id:            isEdit ? deal.id : `deal_${crypto.randomUUID().slice(0, 8)}`,
       name:          document.getElementById('deal-name').value.trim(),
-      amount:        Number(document.getElementById('deal-amount').value),
+      amount:        newAmount,
       costAmount:    Number(document.getElementById('deal-cost-amount').value) || undefined,
       closeDate:     document.getElementById('deal-close-date').value,
       assignee_id:   assigneeId,
@@ -308,6 +322,7 @@ export function renderDeal(root, hash) {
       bant:          readBant(),
       ballOwner:     readBallOwner(),
       ballDetail:    readBallDetail(),
+      amountHistory,
       createdAt:     isEdit ? deal.createdAt : now,
       updatedAt:     now,
       isWon:         deal?.isWon ?? false,

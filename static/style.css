@@ -1100,6 +1100,31 @@ canvas { max-width: 100%; }
 .my-trend-insight { font-size: 12px; color: var(--color-muted); margin-top: 4px; line-height: 1.5; }
 .my-trend-ok { font-size: 13px; color: var(--color-success); padding: 12px; text-align: center; }
 
+/* ---------- ユーティリティ ---------- */
+.text-muted  { color: var(--color-muted); }
+.text-danger { color: var(--color-danger); }
+
+/* ---------- パイプライン価格圧縮（フォーキャスト） ---------- */
+.compression-row {
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 10px;
+}
+.compression-item {
+  padding: 12px 16px; border-radius: var(--radius);
+  border: 1px solid var(--color-border); min-width: 140px;
+}
+.compression-item--highlight {
+  border-color: #fca5a5; background: #fef2f2;
+}
+.compression-label { font-size: 11px; color: var(--color-muted); font-weight: 600; margin-bottom: 4px; }
+.compression-value { font-size: 18px; font-weight: 700; }
+.compression-value--danger { color: var(--color-danger); }
+.compression-rate  { font-size: 11px; color: var(--color-danger); margin-top: 2px; }
+.compression-arrow { font-size: 20px; color: var(--color-muted); }
+.compression-meta  { font-size: 12px; color: var(--color-muted); }
+
+/* ---------- 値引き率ハイライト ---------- */
+.discount-rate--high { color: var(--color-danger); }
+
 /* ---------- 404 / 空状態 ---------- */
 .not-found, .empty-state {
   color: var(--color-muted);

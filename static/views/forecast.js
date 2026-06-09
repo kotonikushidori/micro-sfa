@@ -24,6 +24,39 @@ export function renderForecast(root) {
   renderForecastContent('')
 }
 
+function renderCompressionSummary(deals) {
+  const changed = deals.filter(d => d.amountHistory && d.amountHistory.length > 1)
+  if (changed.length === 0) return ''
+
+  const original   = deals.reduce((s, d) => s + (d.amountHistory?.[0]?.amount ?? d.amount), 0)
+  const current    = deals.reduce((s, d) => s + d.amount, 0)
+  const compressed = original - current
+  const rate       = original > 0 ? Math.round((compressed / original) * 100) : 0
+
+  return `
+    <section class="card">
+      <h3>パイプライン価格圧縮</h3>
+      <div class="compression-row">
+        <div class="compression-item">
+          <div class="compression-label">当初見込み合計</div>
+          <div class="compression-value">${formatCurrency(original)}</div>
+        </div>
+        <div class="compression-arrow">→</div>
+        <div class="compression-item">
+          <div class="compression-label">現在合計</div>
+          <div class="compression-value">${formatCurrency(current)}</div>
+        </div>
+        <div class="compression-item compression-item--highlight">
+          <div class="compression-label">圧縮額</div>
+          <div class="compression-value compression-value--danger">▲${formatCurrency(compressed)}</div>
+          <div class="compression-rate">${rate}% 下方修正</div>
+        </div>
+      </div>
+      <p class="compression-meta">${changed.length}件 / ${deals.length}件で金額変更あり</p>
+    </section>
+  `
+}
+
 function renderForecastContent(deptId) {
   const content = document.getElementById('forecast-content')
   const deals   = AppState.deals.filter(d => !d.isWon && !d.isLost && (!deptId || d.dept_id === deptId))
@@ -73,6 +106,8 @@ function renderForecastContent(deptId) {
           </div>
         </div>
       </section>
+
+      ${renderCompressionSummary(deals)}
 
       <!-- 要注意案件 -->
       <section class="card">
