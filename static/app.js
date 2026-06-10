@@ -164,6 +164,13 @@ function updateHeader() {
   navEl.innerHTML = config.nav
     .map(h => `<a href="${h}" class="nav-link">${NAV_LABELS[h]}</a>`)
     .join('')
+
+  const introLink = document.getElementById('header-intro-link')
+  if (AppState.currentUser.role === 'manager') {
+    introLink.classList.remove('hidden')
+  } else {
+    introLink.classList.add('hidden')
+  }
 }
 
 // 起動

@@ -13,6 +13,7 @@ export function renderForecast(root) {
         <option value="">全部署</option>
         ${activeDepts.map(d => `<option value="${d.id}">${d.name}</option>`).join('')}
       </select>
+      <a href="/manual/yomi-guide.html" target="_blank" class="btn btn-ghost btn-sm ml-auto">📖 ヨミ会の進め方</a>
     </div>
     <div id="forecast-content"></div>
   `
