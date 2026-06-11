@@ -8,15 +8,18 @@ services:
       - "127.0.0.1:8989:8080"
     environment:
       PORT: "8080"
+      DATABASE_URL: "/data/sfa.db"
+    volumes:
+      - db-data:/data
     restart: unless-stopped
-    read_only: true
-    tmpfs:
-      - /tmp
     security_opt:
       - no-new-privileges:true
     networks:
       - proxy-net
       - default
+
+volumes:
+  db-data:
 
 networks:
   proxy-net:
