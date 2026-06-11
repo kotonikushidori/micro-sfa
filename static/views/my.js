@@ -157,6 +157,8 @@ export function renderMy(root) {
       </div>
     </section>
     </div>
+
+    <a href="#deal?from=my" class="fab-register" aria-label="案件を登録する">+</a>
   `
 
   // 今すぐやること「他N件表示」
@@ -197,47 +199,78 @@ export function renderMy(root) {
 function renderDealRows(filteredDeals, activities, today, detailed = false) {
   if (filteredDeals.length === 0) return '<p class="empty-state">該当する案件はありません</p>'
   return `
-    <table class="data-table">
-      <thead><tr>
-        <th>案件名</th><th>Phase</th><th>ヨミ</th>
-        ${detailed ? '<th>BANT</th><th>金額</th><th>期待値</th>' : ''}
-        <th>想定受注日</th>
-        ${detailed ? '<th>期ずれ</th>' : ''}
-        <th></th>
-      </tr></thead>
-      <tbody>
-        ${filteredDeals.map(d => {
-          const yomi      = calcYomi(d)
-          const phase     = calcCurrentPhase(d)
-          const bant      = calcBantScore(d)
-          const days      = Math.ceil((new Date(d.closeDate) - today) / 86400000)
-          const closeCls  = days <= 30 && !d.isWon && !d.isLost ? 'text-warn' : ''
-          const pushCount = calcPushCount(d.id, activities)
-          const status    = d.isWon ? '<span class="badge-won">受注</span>'
-                         : d.isLost ? '<span class="badge-lost">失注</span>' : ''
-          return `
-            <tr ${isWarning(d) ? 'class="row-warning"' : ''}>
-              <td>${d.name} ${status}</td>
-              <td>${d.isWon || d.isLost ? '-' : `Phase ${phase}`}</td>
-              <td><span class="yomi-tag yomi-${yomi.key}">${yomi.label}</span></td>
-              ${detailed ? `
-              <td>
-                <div class="mini-bant-bar">
-                  <div class="mini-bant-fill" style="width:${Math.round(bant/8*100)}%;background:${bant>=6?'#22c55e':bant>=4?'#f59e0b':'#ef4444'}"></div>
-                </div>
-                <span class="bant-num">${bant}/8</span>
-              </td>
-              <td>${formatCurrency(d.amount)}</td>
-              <td>${d.isWon || d.isLost ? '-' : formatCurrency(calcExpectedValue(d))}</td>
-              ` : ''}
-              <td class="${closeCls}">${d.closeDate}${days >= 0 && days <= 30 && !d.isWon && !d.isLost ? ` <span class="days-left">残${days}日</span>` : ''}</td>
-              ${detailed ? `<td>${pushCount > 0 ? `<span class="push-badge push-badge--${pushCount >= 3 ? 'danger' : 'warn'}">${pushCount}回</span>` : '-'}</td>` : ''}
-              <td><a href="#deal?id=${d.id}&from=my" class="btn btn-sm">編集</a></td>
-            </tr>
-          `
-        }).join('')}
-      </tbody>
-    </table>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead><tr>
+          <th>案件名</th><th>Phase</th><th>ヨミ</th>
+          ${detailed ? '<th>BANT</th><th>金額</th><th>期待値</th>' : ''}
+          <th>想定受注日</th>
+          ${detailed ? '<th>期ずれ</th>' : ''}
+          <th></th>
+        </tr></thead>
+        <tbody>
+          ${filteredDeals.map(d => {
+            const yomi      = calcYomi(d)
+            const phase     = calcCurrentPhase(d)
+            const bant      = calcBantScore(d)
+            const days      = Math.ceil((new Date(d.closeDate) - today) / 86400000)
+            const closeCls  = days <= 30 && !d.isWon && !d.isLost ? 'text-warn' : ''
+            const pushCount = calcPushCount(d.id, activities)
+            const status    = d.isWon ? '<span class="badge-won">受注</span>'
+                           : d.isLost ? '<span class="badge-lost">失注</span>' : ''
+            return `
+              <tr ${isWarning(d) ? 'class="row-warning"' : ''}>
+                <td>${d.name} ${status}</td>
+                <td>${d.isWon || d.isLost ? '-' : `Phase ${phase}`}</td>
+                <td><span class="yomi-tag yomi-${yomi.key}">${yomi.label}</span></td>
+                ${detailed ? `
+                <td>
+                  <div class="mini-bant-bar">
+                    <div class="mini-bant-fill" style="width:${Math.round(bant/8*100)}%;background:${bant>=6?'#22c55e':bant>=4?'#f59e0b':'#ef4444'}"></div>
+                  </div>
+                  <span class="bant-num">${bant}/8</span>
+                </td>
+                <td>${formatCurrency(d.amount)}</td>
+                <td>${d.isWon || d.isLost ? '-' : formatCurrency(calcExpectedValue(d))}</td>
+                ` : ''}
+                <td class="${closeCls}">${d.closeDate}${days >= 0 && days <= 30 && !d.isWon && !d.isLost ? ` <span class="days-left">残${days}日</span>` : ''}</td>
+                ${detailed ? `<td>${pushCount > 0 ? `<span class="push-badge push-badge--${pushCount >= 3 ? 'danger' : 'warn'}">${pushCount}回</span>` : '-'}</td>` : ''}
+                <td><a href="#deal?id=${d.id}&from=my" class="btn btn-sm">編集</a></td>
+              </tr>
+            `
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="deal-mobile-list">
+      ${filteredDeals.map(d => renderDealMobileCard(d, today)).join('')}
+    </div>
+  `
+}
+
+function renderDealMobileCard(deal, today) {
+  const yomi    = calcYomi(deal)
+  const phase   = calcCurrentPhase(deal)
+  const days    = Math.ceil((new Date(deal.closeDate) - today) / 86400000)
+  const warn    = isWarning(deal)
+  const status  = deal.isWon ? '<span class="badge-won">受注</span>'
+               : deal.isLost ? '<span class="badge-lost">失注</span>' : ''
+  const dateCls = days <= 30 && !deal.isWon && !deal.isLost ? 'deal-mc-date--warn' : ''
+  const dateStr = deal.isWon || deal.isLost ? '' : `
+    <span class="deal-mc-date ${dateCls}">${deal.closeDate}${days >= 0 && days <= 30 ? ` <span class="days-left">残${days}日</span>` : ''}</span>
+  `
+  return `
+    <div class="deal-mobile-card ${warn ? 'deal-mobile-card--warn' : ''}">
+      <div class="deal-mc-top">
+        <span class="deal-mc-name">${warn ? '<span class="warn-icon">⚠</span> ' : ''}${deal.name} ${status}</span>
+        <a href="#deal?id=${deal.id}&from=my" class="btn btn-sm">編集</a>
+      </div>
+      <div class="deal-mc-meta">
+        ${deal.isWon || deal.isLost ? '' : `<span class="tag-phase tag-phase--${phase}">Phase ${phase}</span>`}
+        <span class="yomi-tag yomi-${yomi.key}">${yomi.label}</span>
+        ${dateStr}
+      </div>
+    </div>
   `
 }
 
