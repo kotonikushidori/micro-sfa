@@ -1,7 +1,7 @@
 // kanban.js: Phase別カンバン画面。警告バッジ・部署/担当者フィルター付き。
 import { AppState } from '/app.js'
 import { BALL_OWNER_OPTIONS, DEFAULT_BALL_OWNER, calcCurrentPhase, calcBantScore, isWarning, formatCurrency, getFiscalQuarterKey } from '/constants.js'
-import { loadTargets } from '/data.js'
+
 
 export function renderKanban(root) {
   const user    = AppState.currentUser
@@ -65,7 +65,7 @@ function renderBoard(deals, { deptId = '', userId = '' } = {}) {
 
   // 今期の目標合計（受注済みカラム用）
   const qk      = getFiscalQuarterKey(new Date(), AppState.settings.fiscalStartMonth)
-  const targets  = loadTargets()
+  const targets  = AppState.targets
   let quarterTarget = 0
   if (userId) {
     quarterTarget = targets.rep[userId]?.[qk] ?? 0

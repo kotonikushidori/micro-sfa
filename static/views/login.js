@@ -1,14 +1,6 @@
-// login.js: ログイン画面。SHA-256ハッシュでlocalStorageのpasswordと照合する。
-import { loadUsers } from '/data.js'
+// login.js: ログイン画面。パスワード検証はサーバー側で行う。
+import { loginAPI } from '/data.js'
 import { login } from '/app.js'
-
-// SHA-256はブラウザネイティブのSubtleCryptoで計算する（外部ライブラリ不要）
-async function sha256(message) {
-  const msgBuffer = new TextEncoder().encode(message)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-}
 
 const DEMO_ACCOUNTS = [
   { name: '田中 一郎', role: 'sales',     label: '営業（sales）' },
@@ -49,54 +41,30 @@ export function renderLogin(root) {
         </form>
 
         <a href="#lp" class="btn-lp-link">💡 micro-SFAとは？</a>
-
-        <button type="button" id="btn-reset-data" class="btn-reset-link">
-          デモデータをリセット（ログインできない場合）
-        </button>
       </div>
     </div>
   `
 
-  // デモアカウントボタン：ユーザー名を自動入力してそのままログイン
-  root.querySelectorAll('.btn-demo-account').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const name = btn.dataset.name
-      const hash = await sha256('demo1234')
-      const users = loadUsers()
-      const user  = users.find(u => u.name === name && u.isActive)
-      if (!user) {
-        alert('デモデータが壊れています。「デモデータをリセット」を押してください。')
-        return
-      }
-      login(user)
-    })
-  })
-
-  // 手動ログイン
-  document.getElementById('login-form').addEventListener('submit', async (e) => {
-    e.preventDefault()
-    const username = document.getElementById('username').value.trim()
-    const password = document.getElementById('password').value
-    const errorEl  = document.getElementById('login-error')
-
-    const hash  = await sha256(password)
-    const users = loadUsers()
-    const user  = users.find(u => u.name === username && u.password === hash && u.isActive)
-
-    if (!user) {
+  async function doLogin(name, password) {
+    const errorEl = document.getElementById('login-error')
+    try {
+      const user = await loginAPI(name, password)
+      errorEl.classList.add('hidden')
+      await login(user)
+    } catch {
       errorEl.textContent = 'ユーザー名またはパスワードが正しくありません'
       errorEl.classList.remove('hidden')
-      return
     }
+  }
 
-    errorEl.classList.add('hidden')
-    login(user)
+  root.querySelectorAll('.btn-demo-account').forEach(btn => {
+    btn.addEventListener('click', () => doLogin(btn.dataset.name, 'demo1234'))
   })
 
-  // LocalStorageを完全リセットして再初期化
-  document.getElementById('btn-reset-data').addEventListener('click', () => {
-    if (!confirm('LocalStorageのデモデータをリセットします。案件データも消えます。よろしいですか？')) return
-    localStorage.clear()
-    location.reload()
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const name     = document.getElementById('username').value.trim()
+    const password = document.getElementById('password').value
+    await doLogin(name, password)
   })
 }

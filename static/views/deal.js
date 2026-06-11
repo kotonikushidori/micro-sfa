@@ -1,6 +1,6 @@
 // deal.js: 案件入力・編集画面。Phase チェックボックスと BANT ラジオボタンで構成。
 import { AppState, refreshState } from '/app.js'
-import { createDeal, updateDeal, appendActivity, loadActivitiesByDeal } from '/data.js'
+import { createDeal, updateDeal, appendActivity } from '/data.js'
 import { BALL_OWNER_OPTIONS, DEFAULT_BALL_OWNER, LOCK_TRIGGER_DEFS, ACTIVITY_TYPES, calcBantScore, calcCurrentPhase, calcYomi, isLocked, formatCurrency, calcPushCount } from '/constants.js'
 
 export function renderDeal(root, hash) {
@@ -283,7 +283,7 @@ export function renderDeal(root, hash) {
   }
 
   // フォーム送信
-  document.getElementById('deal-form').addEventListener('submit', (e) => {
+  document.getElementById('deal-form').addEventListener('submit', async (e) => {
     e.preventDefault()
     const now = new Date().toISOString()
 
@@ -315,7 +315,6 @@ export function renderDeal(root, hash) {
       closeDate:     document.getElementById('deal-close-date').value,
       assignee_id:   assigneeId,
       dept_id:       deptId,
-      // スナップショット：マスター変更の影響を将来の案件レコードに波及させない
       assignee_name: assigneeUser?.name ?? deal?.assignee_name ?? '',
       dept_name:     deptObj?.name ?? deal?.dept_name ?? '',
       phases:        readPhases(),
@@ -330,14 +329,12 @@ export function renderDeal(root, hash) {
     }
 
     if (isEdit) {
-      // 保存前に差分を検出して自動ログを生成する
-      autoLog(deal, payload)
-      updateDeal(payload)
+      await autoLog(deal, payload)
+      await updateDeal(payload)
     } else {
-      createDeal(payload)
+      await createDeal(payload)
     }
 
-    refreshState()
     window._navigate(backDest)
   })
 
@@ -345,18 +342,16 @@ export function renderDeal(root, hash) {
   const btnWon  = document.getElementById('btn-won')
   const btnLost = document.getElementById('btn-lost')
   if (btnWon) {
-    btnWon.addEventListener('click', () => {
+    btnWon.addEventListener('click', async () => {
       if (!confirm('この案件を受注済みにしますか？')) return
-      updateDeal({ ...deal, isWon: true, updatedAt: new Date().toISOString() })
-      refreshState()
+      await updateDeal({ ...deal, isWon: true, updatedAt: new Date().toISOString() })
       window._navigate(backDest)
     })
   }
   if (btnLost) {
-    btnLost.addEventListener('click', () => {
+    btnLost.addEventListener('click', async () => {
       if (!confirm('この案件を失注済みにしますか？')) return
-      updateDeal({ ...deal, isLost: true, updatedAt: new Date().toISOString() })
-      refreshState()
+      await updateDeal({ ...deal, isLost: true, updatedAt: new Date().toISOString() })
       window._navigate(backDest)
     })
   }
@@ -374,35 +369,32 @@ export function renderDeal(root, hash) {
 
 // 保存前後のdiffを検出し、変化があった場合のみ活動ログを生成する。
 // 「いつPhaseが上がったか」「BANTがいつ改善されたか」を事後に追跡できるのがこの機能の価値。
-function autoLog(oldDeal, newDeal) {
+async function autoLog(oldDeal, newDeal) {
   const now    = new Date().toISOString()
   const author = AppState.currentUser
   const base   = { deal_id: oldDeal.id, author_id: author.id, author_name: author.name, date: now.slice(0, 10), createdAt: now }
 
-  // Phase 変化の検出
   const oldPhase = oldDeal.phases.lastIndexOf(true) + 1
   const newPhase = newDeal.phases.lastIndexOf(true) + 1
   if (oldPhase !== newPhase) {
     const dir = newPhase > oldPhase ? '▲' : '▼'
-    appendActivity({
+    await appendActivity({
       ...base,
-      id:      `act_${crypto.randomUUID().slice(0, 8)}`,
-      type:    'phase_change',
+      id: `act_${crypto.randomUUID().slice(0, 8)}`,
+      type: 'phase_change',
       content: `${dir} Phase ${oldPhase} → Phase ${newPhase}`,
     })
   }
 
-  // 期日の後ろ倒し検出（前倒し・変更なしは記録しない）
   if (oldDeal.closeDate && newDeal.closeDate && newDeal.closeDate > oldDeal.closeDate) {
-    appendActivity({
+    await appendActivity({
       ...base,
-      id:      `act_${crypto.randomUUID().slice(0, 8)}`,
-      type:    'close_date_change',
+      id: `act_${crypto.randomUUID().slice(0, 8)}`,
+      type: 'close_date_change',
       content: `📅 想定受注日 ${oldDeal.closeDate} → ${newDeal.closeDate}`,
     })
   }
 
-  // BANTスコア変化の検出
   const oldScore = Object.values(oldDeal.bant).reduce((a, b) => a + b, 0)
   const newScore = Object.values(newDeal.bant).reduce((a, b) => a + b, 0)
   if (oldScore !== newScore) {
@@ -411,10 +403,10 @@ function autoLog(oldDeal, newDeal) {
       .map(item => `${item.key}: ${oldDeal.bant[item.key]}→${newDeal.bant[item.key]}`)
       .join(', ')
     const dir = newScore > oldScore ? '▲' : '▼'
-    appendActivity({
+    await appendActivity({
       ...base,
-      id:      `act_${crypto.randomUUID().slice(0, 8)}`,
-      type:    'bant_change',
+      id: `act_${crypto.randomUUID().slice(0, 8)}`,
+      type: 'bant_change',
       content: `${dir} BANTスコア ${oldScore} → ${newScore}点（${diffs}）`,
     })
   }
@@ -425,7 +417,9 @@ function autoLog(oldDeal, newDeal) {
 // 活動ログ入力フォームを root 内の #activity-section に描画する。
 // 編集フォームとロック済みビューの両方から呼ばれる。
 export function renderActivitySection(container, dealId) {
-  const activities = loadActivitiesByDeal(dealId)
+  const activities = AppState.activities
+    .filter(a => a.deal_id === dealId)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   const manualTypes = ACTIVITY_TYPES.filter(t => t.manual)
   const today = new Date().toISOString().slice(0, 10)
 
@@ -501,13 +495,14 @@ export function renderActivitySection(container, dealId) {
       if (costVal)     record.cost     = Number(costVal)
       if (durationVal) record.duration = Number(durationVal)
     }
-    appendActivity(record)
+    await appendActivity(record)
 
+    // AppState.activities に追加してリスト再描画
+    AppState.activities.unshift(record)
     actContent.value = ''
     actSubmit.disabled = true
-    // リストだけ再描画（フォームはそのまま）
     document.getElementById('activity-list').innerHTML =
-      renderActivityList(loadActivitiesByDeal(dealId))
+      renderActivityList(AppState.activities.filter(a => a.deal_id === dealId).sort((a, b) => b.createdAt.localeCompare(a.createdAt)))
   })
 }
 

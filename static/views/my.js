@@ -1,7 +1,6 @@
 // my.js: sales 専用マイページ。「自分の案件で今何をすべきか」を一覧表示する。
 // Phase × BANT の状態からネクストアクションを自動生成するのがこの画面の核心。
 import { AppState } from '/app.js'
-import { loadActivities, loadTargets } from '/data.js'
 import { BALL_OWNER_OPTIONS, DEFAULT_BALL_OWNER, calcCurrentPhase, calcBantScore, calcExpectedValue, calcYomi, isWarning, formatCurrency, calcRepCoachingData, calcTeamVelocityAvg, LOSS_PHASE_INSIGHTS, BANT_WEAKNESS_INSIGHTS, calcPushCount, getFiscalQuarterKey, getFiscalQuarterRange } from '/constants.js'
 
 // Phase ごとの「次に進むための条件」テキスト
@@ -61,7 +60,7 @@ export function renderMy(root) {
   const active = deals.filter(d => !d.isWon && !d.isLost)
   const won        = deals.filter(d => d.isWon)
   const lost       = deals.filter(d => d.isLost)
-  const activities = loadActivities()
+  const activities = AppState.activities
 
   const totalExpected = active.reduce((s, d) => s + calcExpectedValue(d), 0)
   const warnings      = active.filter(isWarning)
@@ -69,8 +68,7 @@ export function renderMy(root) {
   // 四半期目標
   const fsm        = AppState.settings.fiscalStartMonth
   const currentQk  = getFiscalQuarterKey(new Date(), fsm)
-  const targets     = loadTargets()
-  const repTarget   = targets.rep[user.id]?.[currentQk] ?? 0
+  const repTarget   = AppState.targets.rep[user.id]?.[currentQk] ?? 0
   const { start: qStart, end: qEnd } = getFiscalQuarterRange(currentQk, fsm)
   const qWonAmt = won
     .filter(d => d.updatedAt && new Date(d.updatedAt) >= qStart && new Date(d.updatedAt) < qEnd)
@@ -318,9 +316,8 @@ function renderActionSection(deals) {
 function renderMyTrend(myDeals) {
   if (myDeals.length === 0) return ''
 
-  const activities = loadActivities()
   // チーム全体のデータを計算したうえで自分のデータだけ抽出
-  const allRepData = calcRepCoachingData(AppState.deals, activities)
+  const allRepData = calcRepCoachingData(AppState.deals, AppState.activities)
   const teamAvg    = calcTeamVelocityAvg(allRepData)
   const me         = allRepData.find(r => r.id === AppState.currentUser.id)
   if (!me) return ''

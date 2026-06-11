@@ -2,7 +2,7 @@
 // グラフはCanvas APIのみで描画し、外部ライブラリを使わない。
 import { AppState } from '/app.js'
 import { calcExpectedValue, calcYomi, formatCurrency, getFiscalQuarterKey, getQuarterLabel, getQuarterOptions, getFiscalQuarterRange } from '/constants.js'
-import { loadTargets, saveDeptTarget } from '/data.js'
+import { saveDeptTarget } from '/data.js'
 
 export function renderDashboard(root) {
   const activeDepts = AppState.depts.filter(d => d.isActive)
@@ -255,7 +255,7 @@ function renderDeptTargetSection(filterDeptId) {
   const fsm       = AppState.settings.fiscalStartMonth
   const quarters  = getQuarterOptions(fsm)
   const currentQk = getFiscalQuarterKey(new Date(), fsm)
-  const targets   = loadTargets()
+  const targets   = AppState.targets
   const depts     = filterDeptId
     ? AppState.depts.filter(d => d.id === filterDeptId)
     : AppState.depts.filter(d => d.isActive)
@@ -334,10 +334,9 @@ function bindDeptTargetEvents() {
 
   function refreshRows() {
     const qk      = quarterSel.value
-    const targets = loadTargets()
     const depts   = AppState.depts.filter(d => d.isActive)
     const rows    = document.getElementById('dept-target-rows')
-    if (rows) rows.innerHTML = renderDeptTargetRows(depts, qk, targets)
+    if (rows) rows.innerHTML = renderDeptTargetRows(depts, qk, AppState.targets)
     bindSaveButtons()
   }
 
@@ -350,17 +349,18 @@ function bindSaveButtons() {
     // 既存のリスナーを付け直さないよう clone して置換
     const fresh = input.cloneNode(true)
     input.replaceWith(fresh)
-    fresh.addEventListener('change', () => {
+    fresh.addEventListener('change', async () => {
       const deptId = fresh.dataset.dept
       const qk     = document.getElementById('target-quarter')?.value
       const amount = Number(fresh.value) || 0
       if (!deptId || !qk) return
-      saveDeptTarget(deptId, qk, amount)
-      // 保存後に行だけ再描画
-      const targets = loadTargets()
-      const depts   = AppState.depts.filter(d => d.isActive)
-      const rows    = document.getElementById('dept-target-rows')
-      if (rows) rows.innerHTML = renderDeptTargetRows(depts, qk, targets)
+      await saveDeptTarget(deptId, qk, amount)
+      if (!AppState.targets.dept[deptId]) AppState.targets.dept[deptId] = {}
+      if (amount > 0) AppState.targets.dept[deptId][qk] = amount
+      else delete AppState.targets.dept[deptId][qk]
+      const depts = AppState.depts.filter(d => d.isActive)
+      const rows  = document.getElementById('dept-target-rows')
+      if (rows) rows.innerHTML = renderDeptTargetRows(depts, qk, AppState.targets)
       bindSaveButtons()
     })
   })

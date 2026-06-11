@@ -1,7 +1,7 @@
 // master.js: マスター管理画面（admin専用）。部署・ユーザーの追加・論理削除・ロール変更。
 // 物理削除は禁止。過去の案件スナップショット（assignee_name/dept_name）は変更しない。
 import { AppState, refreshState } from '/app.js'
-import { saveUsers, saveDepts, loadUsers, loadDepts, loadLockConfig, saveLockConfig, loadSettings, saveSettings } from '/data.js'
+import { createUser, updateUser, createDept, updateDept, saveLockConfig, saveSettings } from '/data.js'
 import { LOCK_TRIGGER_DEFS, DEFAULT_LOCK_CONFIG, BANT_PRESETS, PHASE_PRESETS } from '/constants.js'
 
 const ROLES = ['sales', 'manager', 'executive', 'admin']
@@ -40,7 +40,7 @@ function renderTab(tab) {
 // ---------- 部署タブ ----------
 
 function renderDeptTab(content) {
-  const depts = loadDepts()
+  const depts = AppState.depts
   content.innerHTML = `
     <section class="card">
       <div class="section-header">
@@ -66,25 +66,21 @@ function renderDeptTab(content) {
     </section>
   `
 
-  document.getElementById('btn-add-dept').addEventListener('click', () => {
+  document.getElementById('btn-add-dept').addEventListener('click', async () => {
     const name = prompt('新しい部署名を入力してください')?.trim()
     if (!name) return
-    const depts = loadDepts()
-    depts.push({ id: `dept_${crypto.randomUUID().slice(0, 8)}`, name, isActive: true, createdAt: new Date().toISOString() })
-    saveDepts(depts)
-    refreshState()
+    await createDept({ id: `dept_${crypto.randomUUID().slice(0, 8)}`, name, isActive: true, createdAt: new Date().toISOString() })
+    await refreshState()
     renderTab('dept')
   })
 
   content.querySelectorAll('.btn-toggle-dept').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const depts = loadDepts()
-      const dept  = depts.find(d => d.id === btn.dataset.id)
+    btn.addEventListener('click', async () => {
+      const dept = AppState.depts.find(d => d.id === btn.dataset.id)
       if (!dept) return
       if (dept.isActive && !confirm(`「${dept.name}」を無効化します。過去の案件データはそのまま保持されます。`)) return
-      dept.isActive = !dept.isActive
-      saveDepts(depts)
-      refreshState()
+      await updateDept({ ...dept, isActive: !dept.isActive })
+      await refreshState()
       renderTab('dept')
     })
   })
@@ -93,8 +89,8 @@ function renderDeptTab(content) {
 // ---------- ユーザータブ ----------
 
 function renderUserTab(content) {
-  const users = loadUsers()
-  const depts = loadDepts()
+  const users = AppState.users
+  const depts = AppState.depts
 
   content.innerHTML = `
     <section class="card">
@@ -132,26 +128,22 @@ function renderUserTab(content) {
 
   // ロール変更
   content.querySelectorAll('.role-select').forEach(sel => {
-    sel.addEventListener('change', () => {
-      const users = loadUsers()
-      const user  = users.find(u => u.id === sel.dataset.id)
+    sel.addEventListener('change', async () => {
+      const user = AppState.users.find(u => u.id === sel.dataset.id)
       if (!user) return
-      user.role = sel.value
-      saveUsers(users)
-      refreshState()
+      await updateUser({ ...user, role: sel.value })
+      await refreshState()
     })
   })
 
   // 有効/無効切替
   content.querySelectorAll('.btn-toggle-user').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const users = loadUsers()
-      const user  = users.find(u => u.id === btn.dataset.id)
+    btn.addEventListener('click', async () => {
+      const user = AppState.users.find(u => u.id === btn.dataset.id)
       if (!user) return
       if (user.isActive && !confirm(`「${user.name}」を無効化します。過去の案件スナップショットは保持されます。`)) return
-      user.isActive = !user.isActive
-      saveUsers(users)
-      refreshState()
+      await updateUser({ ...user, isActive: !user.isActive })
+      await refreshState()
       renderTab('user')
     })
   })
@@ -160,7 +152,7 @@ function renderUserTab(content) {
   document.getElementById('btn-add-user').addEventListener('click', () => showAddUserModal(depts))
 }
 
-function showAddUserModal(depts) {
+function showAddUserModal(depts = AppState.depts) {
   const overlay = document.createElement('div')
   overlay.className = 'modal-overlay'
   overlay.innerHTML = `
@@ -204,15 +196,13 @@ function showAddUserModal(depts) {
     const dept_id  = document.getElementById('new-user-dept').value
     const role     = document.getElementById('new-user-role').value
     const password = document.getElementById('new-user-password').value
-    const hash     = await sha256(password)
-    const users    = loadUsers()
-    users.push({
+    await createUser({
       id: `user_${crypto.randomUUID().slice(0, 8)}`,
-      name, dept_id, role, password: hash,
+      name, dept_id, role,
+      password, // サーバー側でハッシュ化される
       isActive: true, createdAt: new Date().toISOString(),
     })
-    saveUsers(users)
-    refreshState()
+    await refreshState()
     overlay.remove()
     renderTab('user')
   })
@@ -221,7 +211,7 @@ function showAddUserModal(depts) {
 // ---------- ロック条件タブ ----------
 
 function renderLockTab(content) {
-  const cfg = loadLockConfig() ?? { ...DEFAULT_LOCK_CONFIG }
+  const cfg = AppState.lockConfig ?? { ...DEFAULT_LOCK_CONFIG }
 
   content.innerHTML = `
     <section class="card">
@@ -299,10 +289,10 @@ function renderLockTab(content) {
 
   updatePreview()
 
-  document.getElementById('btn-save-lock').addEventListener('click', () => {
+  document.getElementById('btn-save-lock').addEventListener('click', async () => {
     const nextCfg = readConfig()
-    saveLockConfig(nextCfg)
-    refreshState()
+    await saveLockConfig(nextCfg)
+    await refreshState()
     updatePreview()
     alert('ロック設定を保存しました。')
   })
@@ -311,7 +301,7 @@ function renderLockTab(content) {
 // ---------- システム設定タブ ----------
 
 function renderSettingsTab(content) {
-  const settings    = loadSettings()
+  const settings    = AppState.settings
   const fsm         = settings.fiscalStartMonth ?? 4
   const bantPreset  = settings.bantPreset ?? 'default'
   const phasePreset = settings.phasePreset ?? 'default'
@@ -398,12 +388,12 @@ function renderSettingsTab(content) {
     document.getElementById('phase-preset-preview').innerHTML = renderPhasePreviewHtml(e.target.value)
   })
 
-  document.getElementById('save-settings').addEventListener('click', () => {
+  document.getElementById('save-settings').addEventListener('click', async () => {
     const newFsm         = Number(document.getElementById('fiscal-end-month').value)
     const newBantPreset  = document.getElementById('bant-preset').value
     const newPhasePreset = document.getElementById('phase-preset').value
-    saveSettings({ ...loadSettings(), fiscalStartMonth: newFsm, bantPreset: newBantPreset, phasePreset: newPhasePreset })
-    refreshState()
+    await saveSettings({ ...AppState.settings, fiscalStartMonth: newFsm, bantPreset: newBantPreset, phasePreset: newPhasePreset })
+    await refreshState()
     const saved = document.getElementById('settings-saved')
     saved.classList.remove('hidden')
     setTimeout(() => saved.classList.add('hidden'), 2000)
@@ -447,8 +437,4 @@ function renderPhasePreviewHtml(presetKey) {
   `
 }
 
-async function sha256(message) {
-  const buf  = new TextEncoder().encode(message)
-  const hash = await crypto.subtle.digest('SHA-256', buf)
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('')
-}
+

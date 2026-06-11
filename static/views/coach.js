@@ -2,7 +2,7 @@
 // 「目標達成率」ではなく「フェーズ進行速度」と「フェーズ別失注タイミング」で指導ポイントを特定する。
 // 診断テキストはシステムが自動生成する。マネージャーは数値に基づいて話を始めるだけでよい。
 import { AppState } from '/app.js'
-import { loadActivities, loadTargets, saveRepTarget } from '/data.js'
+import { saveRepTarget } from '/data.js'
 import {
   LOSS_PHASE_INSIGHTS, BANT_WEAKNESS_INSIGHTS,
   calcCurrentPhase, calcDaysSinceLastPhaseChange,
@@ -31,7 +31,7 @@ export function renderCoach(root) {
 
   const render = () => {
     const deptId     = document.getElementById('coach-dept').value
-    const activities = loadActivities()
+    const activities = AppState.activities
     const deals      = deptId ? AppState.deals.filter(d => d.dept_id === deptId) : AppState.deals
     const repData    = calcRepCoachingData(deals, activities)
     const teamAvg    = calcTeamVelocityAvg(repData)
@@ -65,7 +65,7 @@ export function renderCoach(root) {
 
 function renderRepTargetSection(deals, deptId, currentQk) {
   const quarters = getQuarterOptions(AppState.settings.fiscalStartMonth)
-  const targets  = loadTargets()
+  const targets  = AppState.targets
   const users    = AppState.users.filter(u => u.isActive && (u.role === 'sales' || u.role === 'manager'))
   const deptReps = deptId ? users.filter(u => u.dept_id === deptId) : users
 
@@ -140,7 +140,7 @@ function bindRepTargetEvents(deals, deptId) {
   if (!quarterSel) return
 
   function refreshRows(qk) {
-    const targets = loadTargets()
+    const targets = AppState.targets
     const users   = AppState.users.filter(u => u.isActive && (u.role === 'sales' || u.role === 'manager'))
     const deptReps = deptId ? users.filter(u => u.dept_id === deptId) : users
     const rows = document.getElementById('rep-target-rows')
@@ -173,16 +173,18 @@ function attachRepInputListeners(quarterKey, deals, deptId) {
   document.querySelectorAll('.rep-target-input').forEach(input => {
     const fresh = input.cloneNode(true)
     input.replaceWith(fresh)
-    fresh.addEventListener('change', () => {
+    fresh.addEventListener('change', async () => {
       const userId = fresh.dataset.user
       const amount = Number(fresh.value) || 0
-      saveRepTarget(userId, quarterKey, amount)
+      await saveRepTarget(userId, quarterKey, amount)
+      if (!AppState.targets.rep[userId]) AppState.targets.rep[userId] = {}
+      if (amount > 0) AppState.targets.rep[userId][quarterKey] = amount
+      else delete AppState.targets.rep[userId][quarterKey]
       const qk = document.getElementById('rep-target-quarter')?.value ?? quarterKey
-      const targets  = loadTargets()
       const users    = AppState.users.filter(u => u.isActive && (u.role === 'sales' || u.role === 'manager'))
       const deptReps = deptId ? users.filter(u => u.dept_id === deptId) : users
       const rows = document.getElementById('rep-target-rows')
-      if (rows) rows.innerHTML = renderRepTargetRows(deptReps, qk, targets)
+      if (rows) rows.innerHTML = renderRepTargetRows(deptReps, qk, AppState.targets)
       attachRepInputListeners(qk, deals, deptId)
     })
   })

@@ -1,7 +1,5 @@
 // app.js: アプリケーションの起動・ルーティング・グローバル状態管理
-// 各画面モジュールは views/ 以下に分離し、ここでは組み立てのみ行う。
-
-import { loadCurrentUser, saveCurrentUser, clearCurrentUser, loadDeals, loadUsers, loadDepts, loadLockConfig, loadSettings, initDemoData } from '/data.js'
+import { loadCurrentUser, logoutAPI, fetchAllData } from '/data.js'
 import { DEFAULT_LOCK_CONFIG, getBantItems, getPhaseItems } from '/constants.js'
 import { renderLogin } from '/views/login.js'
 import { renderMy } from '/views/my.js'
@@ -22,13 +20,14 @@ export const AppState = {
   deals: [],
   users: [],
   depts: [],
+  activities: [],
+  targets: { dept: {}, rep: {} },
   lockConfig: DEFAULT_LOCK_CONFIG,
-  settings: { fiscalStartMonth: 4 },
+  settings: { fiscalStartMonth: 4, bantPreset: 'default', phasePreset: 'default' },
   bantItems: getBantItems('default'),
   phaseItems: getPhaseItems('default'),
 }
 
-// ロールごとのデフォルト画面とナビリンク定義
 const ROLE_CONFIG = {
   sales:     { defaultHash: '#my',        nav: ['#my'],                                                 allow: ['#deal'] },
   manager:   { defaultHash: '#kanban',    nav: ['#my', '#kanban', '#forecast', '#dashboard', '#coach'], allow: ['#deal'] },
@@ -38,7 +37,6 @@ const ROLE_CONFIG = {
 
 const NAV_LABELS = {
   '#my':        'マイページ',
-  '#deal':      '案件登録',
   '#kanban':    'カンバン',
   '#forecast':  'ヨミ会',
   '#dashboard': 'ダッシュボード',
@@ -46,44 +44,47 @@ const NAV_LABELS = {
   '#coach':     '指導ダッシュボード',
 }
 
-// ロールが画面にアクセス可能かを返す
 function canAccess(role, hash) {
-  const base = hash.split('?')[0]  // クエリ部分を除去
+  const base = hash.split('?')[0]
   const config = ROLE_CONFIG[role]
   if (!config) return false
   return config.nav.includes(base) || (config.allow ?? []).includes(base)
 }
 
-// グローバル状態を最新のlocalStorageから再読み込み
-export function refreshState() {
-  AppState.deals = loadDeals()
-  AppState.users = loadUsers()
-  AppState.depts = loadDepts()
-  AppState.lockConfig = loadLockConfig() ?? DEFAULT_LOCK_CONFIG
-  AppState.settings = loadSettings()
-  AppState.bantItems  = getBantItems(AppState.settings.bantPreset)
-  AppState.phaseItems = getPhaseItems(AppState.settings.phasePreset)
+// サーバーから全データを取得して AppState を更新する（非同期）
+export async function refreshState() {
+  try {
+    const { deals, users, depts, activities, targets, settings } = await fetchAllData()
+    AppState.deals      = deals      ?? []
+    AppState.users      = users      ?? []
+    AppState.depts      = depts      ?? []
+    AppState.activities = activities ?? []
+    AppState.targets    = targets    ?? { dept: {}, rep: {} }
+    AppState.lockConfig = settings?.lockConfig ?? DEFAULT_LOCK_CONFIG
+    AppState.settings   = settings  ?? AppState.settings
+    AppState.bantItems  = getBantItems(settings?.bantPreset)
+    AppState.phaseItems = getPhaseItems(settings?.phasePreset)
+  } catch (e) {
+    console.error('refreshState failed:', e)
+  }
 }
 
-// ログイン処理（login.js から呼ばれる）
-export function login(user) {
+// ログイン後に呼ばれる（login.js から）
+export async function login(user) {
   AppState.currentUser = user
-  saveCurrentUser(user)
-  refreshState()
+  await refreshState()
   updateHeader()
   const config = ROLE_CONFIG[user.role]
   navigate(config ? config.defaultHash : '#login')
 }
 
-// ログアウト処理
-function logout() {
+async function logout() {
+  await logoutAPI()
   AppState.currentUser = null
-  clearCurrentUser()
   navigate('#login')
 }
 
-// ハッシュ変更でルーティング
-function route() {
+async function route() {
   const hash = location.hash || '#login'
   AppState.currentHash = hash
   const root = document.getElementById('app-root')
@@ -95,26 +96,9 @@ function route() {
     return
   }
 
-  if (hash === '#lp') {
-    updateHeader()
-    root.innerHTML = ''
-    renderLp(root)
-    return
-  }
-
-  if (hash === '#lp-sales') {
-    updateHeader()
-    root.innerHTML = ''
-    renderLpSales(root)
-    return
-  }
-
-  if (hash === '#lp-manager') {
-    updateHeader()
-    root.innerHTML = ''
-    renderLpManager(root)
-    return
-  }
+  if (hash === '#lp')         { updateHeader(); root.innerHTML = ''; renderLp(root);        return }
+  if (hash === '#lp-sales')   { updateHeader(); root.innerHTML = ''; renderLpSales(root);   return }
+  if (hash === '#lp-manager') { updateHeader(); root.innerHTML = ''; renderLpManager(root); return }
 
   if (!AppState.currentUser) {
     navigate('#login')
@@ -128,17 +112,17 @@ function route() {
     return
   }
 
-  refreshState()
+  await refreshState()
   root.innerHTML = ''
 
   switch (base) {
-    case '#my':        renderMy(root);               break
-    case '#deal':      renderDeal(root, hash);       break
-    case '#kanban':    renderKanban(root);            break
-    case '#forecast':  renderForecast(root);          break
-    case '#dashboard': renderDashboard(root);         break
-    case '#master':    renderMaster(root);            break
-    case '#coach':     renderCoach(root);             break
+    case '#my':        renderMy(root);            break
+    case '#deal':      renderDeal(root, hash);     break
+    case '#kanban':    renderKanban(root);          break
+    case '#forecast':  renderForecast(root);        break
+    case '#dashboard': renderDashboard(root);       break
+    case '#master':    renderMaster(root);          break
+    case '#coach':     renderCoach(root);           break
     default: root.innerHTML = '<p class="not-found">ページが見つかりません</p>'
   }
 }
@@ -148,7 +132,7 @@ function navigate(hash) {
 }
 
 function updateHeader() {
-  const header = document.getElementById('app-header')
+  const header  = document.getElementById('app-header')
   const navEl   = document.getElementById('app-nav')
   const label   = document.getElementById('current-user-label')
 
@@ -173,21 +157,19 @@ function updateHeader() {
   }
 }
 
-// 起動
-function init() {
-  initDemoData()
-
-  AppState.currentUser = loadCurrentUser()
-  refreshState()
+async function init() {
+  AppState.currentUser = await loadCurrentUser()
+  if (AppState.currentUser) {
+    await refreshState()
+  }
   updateHeader()
 
   document.getElementById('logout-btn').addEventListener('click', logout)
-  window.addEventListener('hashchange', route)
+  window.addEventListener('hashchange', () => route())
 
   route()
 }
 
-// navigate をグローバルに公開（各 view から使用）
 window._navigate = navigate
 
 init()
