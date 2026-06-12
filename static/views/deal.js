@@ -470,7 +470,7 @@ export function renderActivitySection(container, dealId) {
     actSubmit.disabled = actContent.value.trim() === ''
   })
 
-  document.getElementById('activity-form').addEventListener('submit', (e) => {
+  document.getElementById('activity-form').addEventListener('submit', async (e) => {
     e.preventDefault()
     const type    = document.getElementById('act-type').value
     const date    = document.getElementById('act-date').value
