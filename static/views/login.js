@@ -51,7 +51,7 @@ export function renderLogin(root) {
       const user = await loginAPI(name, password)
       errorEl.classList.add('hidden')
       await login(user)
-    } catch {
+    } catch (e) {
       errorEl.textContent = 'ユーザー名またはパスワードが正しくありません'
       errorEl.classList.remove('hidden')
     }

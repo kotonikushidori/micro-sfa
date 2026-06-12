@@ -31,7 +31,7 @@ export async function logoutAPI() {
 export async function loadCurrentUser() {
   try {
     return await apiFetch('/me')
-  } catch {
+  } catch (e) {
     return null
   }
 }
