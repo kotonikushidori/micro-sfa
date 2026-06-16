@@ -91,6 +91,30 @@ export function renderMy(root) {
       <a href="#deal?from=my" class="btn btn-primary">+ 案件を登録する</a>
     </div>
 
+    <div class="my-narrow">
+    <!-- 今すぐやること（ボールが自分にある案件） -->
+    ${renderActionSection(sorted)}
+
+    <!-- 自分の傾向 -->
+    ${renderMyTrend(deals)}
+
+    <!-- 担当案件一覧 -->
+    <section class="card">
+      <div class="deal-list-header">
+        <h3>担当案件一覧</h3>
+        <button id="deal-detail-toggle" class="btn-text-toggle">詳細を表示</button>
+      </div>
+      <div class="deal-tabs">
+        <button class="tab-btn active" data-deal-tab="active">アクティブ <span class="tab-count">${active.length}</span></button>
+        <button class="tab-btn" data-deal-tab="won">受注済み <span class="tab-count">${won.length}</span></button>
+        <button class="tab-btn" data-deal-tab="lost">失注済み <span class="tab-count">${lost.length}</span></button>
+        <button class="tab-btn" data-deal-tab="all">すべて <span class="tab-count">${deals.length}</span></button>
+      </div>
+      <div id="deal-table-wrap">
+        ${renderDealRows(active, activities, today, false)}
+      </div>
+    </section>
+
     <!-- サマリーカード -->
     <div class="summary-cards">
       <div class="summary-card">
@@ -130,30 +154,6 @@ export function renderMy(root) {
         </div>
       `}
     </div>
-
-    <div class="my-narrow">
-    <!-- 今すぐやること（ボールが自分にある案件） -->
-    ${renderActionSection(sorted)}
-
-    <!-- 自分の傾向 -->
-    ${renderMyTrend(deals)}
-
-    <!-- 担当案件一覧 -->
-    <section class="card">
-      <div class="deal-list-header">
-        <h3>担当案件一覧</h3>
-        <button id="deal-detail-toggle" class="btn-text-toggle">詳細を表示</button>
-      </div>
-      <div class="deal-tabs">
-        <button class="tab-btn active" data-deal-tab="active">アクティブ <span class="tab-count">${active.length}</span></button>
-        <button class="tab-btn" data-deal-tab="won">受注済み <span class="tab-count">${won.length}</span></button>
-        <button class="tab-btn" data-deal-tab="lost">失注済み <span class="tab-count">${lost.length}</span></button>
-        <button class="tab-btn" data-deal-tab="all">すべて <span class="tab-count">${deals.length}</span></button>
-      </div>
-      <div id="deal-table-wrap">
-        ${renderDealRows(active, activities, today, false)}
-      </div>
-    </section>
     </div>
 
     <a href="#deal?from=my" class="fab-register" aria-label="案件を登録する">+</a>

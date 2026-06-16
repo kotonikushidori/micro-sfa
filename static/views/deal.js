@@ -35,7 +35,7 @@ export function renderDeal(root, hash) {
   // salesの場合は担当者を自分に固定
   const isSales = AppState.currentUser.role === 'sales'
 
-  const pushCount = isEdit ? calcPushCount(deal.id, loadActivitiesByDeal(deal.id)) : 0
+  const pushCount = isEdit ? calcPushCount(deal.id, AppState.activities) : 0
 
   root.innerHTML = `
     <div class="page-header">
@@ -422,6 +422,9 @@ export function renderActivitySection(container, dealId) {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   const manualTypes = ACTIVITY_TYPES.filter(t => t.manual)
   const today = new Date().toISOString().slice(0, 10)
+  const deal  = AppState.deals.find(d => d.id === dealId)
+
+  const hasSpeechAPI = ('SpeechRecognition' in window) || ('webkitSpeechRecognition' in window)
 
   container.innerHTML = `
     <div class="activity-section">
@@ -446,7 +449,25 @@ export function renderActivitySection(container, dealId) {
             </div>
           </div>
         </div>
-        <textarea id="act-content" class="activity-textarea" placeholder="内容を入力（訪問先、話した内容、次のアクションなど）" rows="2"></textarea>
+
+        ${hasSpeechAPI ? `
+        <div class="voice-input-row">
+          <button type="button" id="act-voice-btn" class="btn-voice">🎤 音声入力</button>
+          <span id="act-voice-status" class="voice-status"></span>
+        </div>
+        ` : ''}
+
+        <textarea id="act-content" class="activity-textarea" placeholder="内容を入力（訪問先、話した内容、次のアクションなど）" rows="3"></textarea>
+
+        <div id="act-ai-bar" class="act-ai-bar hidden">
+          <button type="button" id="act-ai-btn" class="btn btn-ghost btn-sm">✨ AI で整理</button>
+          <span class="act-ai-hint">商談内容・アクション・宿題を自動分類します</span>
+        </div>
+
+        <div id="act-ai-alert" class="act-ai-alert hidden">
+          ⚠️ 次のアクションや宿題が見当たりませんでした。内容を確認・追記してから記録してください。
+        </div>
+
         <button type="submit" id="act-submit" class="btn btn-primary btn-act-submit" disabled>記録する</button>
       </form>
 
@@ -456,7 +477,7 @@ export function renderActivitySection(container, dealId) {
     </div>
   `
 
-  const actType = document.getElementById('act-type')
+  const actType    = document.getElementById('act-type')
   const visitFields = document.getElementById('act-visit-fields')
   function toggleVisitFields() {
     visitFields.classList.toggle('hidden', actType.value !== 'visit')
@@ -466,15 +487,106 @@ export function renderActivitySection(container, dealId) {
 
   const actContent = document.getElementById('act-content')
   const actSubmit  = document.getElementById('act-submit')
+  const aiBar      = document.getElementById('act-ai-bar')
+  const aiAlert    = document.getElementById('act-ai-alert')
+
   actContent.addEventListener('input', () => {
-    actSubmit.disabled = actContent.value.trim() === ''
+    const hasText = actContent.value.trim() !== ''
+    actSubmit.disabled = !hasText
+    if (aiBar) aiBar.classList.toggle('hidden', !hasText)
+  })
+
+  // 音声入力
+  if (hasSpeechAPI) {
+    setupVoiceInput(deal?.name ?? '', actContent, actSubmit, aiBar, aiAlert)
+  }
+
+  // AI 整理ボタン
+  document.getElementById('act-ai-btn')?.addEventListener('click', async () => {
+    const text = actContent.value.trim()
+    if (!text) return
+    const aiBtn = document.getElementById('act-ai-btn')
+    const voiceStatus = document.getElementById('act-voice-status')
+    aiBtn.disabled = true
+    aiBtn.textContent = '整理中...'
+    aiAlert.classList.add('hidden')
+
+    try {
+      const resp = await fetch('/api/ai/structure-activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, deal_name: deal?.name ?? '' }),
+      })
+      if (!resp.ok) {
+        const err = await resp.json()
+        throw new Error(err.error ?? 'AI整理に失敗しました')
+      }
+      const data = await resp.json()
+
+      const lines = []
+      if (data.summary) lines.push(data.summary)
+      if (data.nextActions?.length) {
+        lines.push('\n▶ 次のアクション')
+        data.nextActions.forEach(a => lines.push(`• ${a}`))
+      }
+      if (data.myTasks?.length) {
+        lines.push('\n▶ 自分の宿題')
+        data.myTasks.forEach(t => lines.push(`• ${t}`))
+      }
+      if (data.customerTasks?.length) {
+        lines.push('\n▶ 顧客の宿題')
+        data.customerTasks.forEach(t => lines.push(`• ${t}`))
+      }
+      lines.push('\n─────────────────────')
+      lines.push(`【音声原文】\n${text}`)
+
+      actContent.value = lines.join('\n')
+      actSubmit.disabled = false
+
+      // 交通費・所要時間が取れた場合は訪問種別に切り替えて自動セット
+      if (data.cost != null || data.duration != null) {
+        actType.value = 'visit'
+        toggleVisitFields()
+        if (data.cost != null)     document.getElementById('act-cost').value     = data.cost
+        if (data.duration != null) document.getElementById('act-duration').value = data.duration
+      } else {
+        actType.value = 'voice_memo'
+        toggleVisitFields()
+      }
+
+      const hasActions =
+        (data.nextActions?.length ?? 0) +
+        (data.myTasks?.length ?? 0) +
+        (data.customerTasks?.length ?? 0) > 0
+      if (!hasActions) aiAlert.classList.remove('hidden')
+
+      if (voiceStatus) {
+        const extras = [
+          data.cost     != null ? `交通費 ${data.cost.toLocaleString()}円` : '',
+          data.duration != null ? `所要時間 ${data.duration}分` : '',
+        ].filter(Boolean)
+        voiceStatus.textContent = 'AI整理が完了しました。' +
+          (extras.length ? `${extras.join('・')}を自動設定しました。` : '') +
+          '内容を確認・編集してから記録してください。'
+        voiceStatus.className = 'voice-status voice-status--done'
+      }
+    } catch (err) {
+      const voiceStatus = document.getElementById('act-voice-status')
+      if (voiceStatus) {
+        voiceStatus.textContent = `エラー: ${err.message}`
+        voiceStatus.className = 'voice-status voice-status--error'
+      }
+    } finally {
+      aiBtn.disabled = false
+      aiBtn.textContent = '✨ AI で整理'
+    }
   })
 
   document.getElementById('activity-form').addEventListener('submit', async (e) => {
     e.preventDefault()
     const type    = document.getElementById('act-type').value
     const date    = document.getElementById('act-date').value
-    const content = document.getElementById('act-content').value.trim()
+    const content = actContent.value.trim()
     if (!content) return
 
     const costVal     = document.getElementById('act-cost').value
@@ -497,12 +609,86 @@ export function renderActivitySection(container, dealId) {
     }
     await appendActivity(record)
 
-    // AppState.activities に追加してリスト再描画
     AppState.activities.unshift(record)
     actContent.value = ''
     actSubmit.disabled = true
+    if (aiBar)   aiBar.classList.add('hidden')
+    if (aiAlert) aiAlert.classList.add('hidden')
+    const voiceStatus = document.getElementById('act-voice-status')
+    if (voiceStatus) voiceStatus.textContent = ''
     document.getElementById('activity-list').innerHTML =
       renderActivityList(AppState.activities.filter(a => a.deal_id === dealId).sort((a, b) => b.createdAt.localeCompare(a.createdAt)))
+  })
+}
+
+function setupVoiceInput(dealName, actContent, actSubmit, aiBar, aiAlert) {
+  const voiceBtn    = document.getElementById('act-voice-btn')
+  const voiceStatus = document.getElementById('act-voice-status')
+  if (!voiceBtn) return
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+  let recognition    = null
+  let isRecording    = false
+  let finalTranscript = ''
+
+  voiceBtn.addEventListener('click', () => {
+    if (isRecording) {
+      recognition?.stop()
+      return
+    }
+
+    finalTranscript = ''
+    recognition = new SR()
+    recognition.lang = 'ja-JP'
+    recognition.continuous = true
+    recognition.interimResults = true
+
+    recognition.onstart = () => {
+      isRecording = true
+      voiceBtn.textContent = '⏹ 停止'
+      voiceBtn.classList.add('btn-voice--recording')
+      voiceStatus.textContent = '録音中… 話し終わったら停止してください'
+      voiceStatus.className = 'voice-status voice-status--recording'
+      aiAlert.classList.add('hidden')
+    }
+
+    recognition.onresult = (event) => {
+      let interim = ''
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript
+        } else {
+          interim = event.results[i][0].transcript
+        }
+      }
+      actContent.value = finalTranscript + interim
+      actSubmit.disabled = actContent.value.trim() === ''
+      if (aiBar) aiBar.classList.toggle('hidden', actContent.value.trim() === '')
+    }
+
+    recognition.onend = () => {
+      isRecording = false
+      voiceBtn.textContent = '🎤 音声入力'
+      voiceBtn.classList.remove('btn-voice--recording')
+      if (actContent.value.trim()) {
+        voiceStatus.textContent = '録音完了。「AI で整理」を押して構造化できます。'
+        voiceStatus.className = 'voice-status voice-status--done'
+        if (aiBar) aiBar.classList.remove('hidden')
+      } else {
+        voiceStatus.textContent = ''
+        voiceStatus.className = 'voice-status'
+      }
+    }
+
+    recognition.onerror = (event) => {
+      isRecording = false
+      voiceBtn.textContent = '🎤 音声入力'
+      voiceBtn.classList.remove('btn-voice--recording')
+      voiceStatus.textContent = `録音エラー: ${event.error}`
+      voiceStatus.className = 'voice-status voice-status--error'
+    }
+
+    recognition.start()
   })
 }
 

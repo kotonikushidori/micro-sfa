@@ -4,12 +4,15 @@
 package handler
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -57,6 +60,8 @@ func (app *App) Routes() http.Handler {
 
 	mux.Handle("GET /settings", auth(http.HandlerFunc(app.handleGetSettings)))
 	mux.Handle("PUT /settings", auth(http.HandlerFunc(app.handleSaveSettings)))
+
+	mux.Handle("POST /ai/structure-activity", auth(http.HandlerFunc(app.handleStructureActivity)))
 
 	return mux
 }
@@ -395,6 +400,114 @@ func (app *App) handleSaveSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, s)
+}
+
+// ---------- AI 活動ログ構造化 ----------
+
+func (app *App) handleStructureActivity(w http.ResponseWriter, r *http.Request) {
+	apiKey := os.Getenv("ANTHROPIC_API_KEY")
+	if apiKey == "" {
+		writeError(w, http.StatusServiceUnavailable, "AI機能は設定されていません（ANTHROPIC_API_KEY 未設定）")
+		return
+	}
+
+	var req struct {
+		Text     string `json:"text"`
+		DealName string `json:"deal_name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request")
+		return
+	}
+	if strings.TrimSpace(req.Text) == "" {
+		writeError(w, http.StatusBadRequest, "text is required")
+		return
+	}
+
+	result, err := callClaudeStructure(req.Text, req.DealName, apiKey)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, result)
+}
+
+type structuredActivity struct {
+	Summary       string   `json:"summary"`
+	NextActions   []string `json:"nextActions"`
+	MyTasks       []string `json:"myTasks"`
+	CustomerTasks []string `json:"customerTasks"`
+	Cost          *int     `json:"cost"`     // 交通費（円）、言及なければ null
+	Duration      *int     `json:"duration"` // 所要時間（分）、言及なければ null
+}
+
+func callClaudeStructure(text, dealName, apiKey string) (*structuredActivity, error) {
+	prompt := fmt.Sprintf(`あなたは営業支援AIです。以下は営業担当者が商談後に音声入力した内容です。
+
+案件名: %s
+
+音声テキスト:
+%s
+
+以下のJSON形式で整理してください。
+
+{
+  "summary": "商談内容の要約（2〜4文で簡潔に）",
+  "nextActions": ["営業担当者が次に取るべき具体的なアクション"],
+  "myTasks": ["営業担当者自身の持ち帰りタスク・宿題"],
+  "customerTasks": ["顧客側に依頼したこと・顧客の宿題"],
+  "cost": 交通費が言及されていれば円単位の整数、なければ null,
+  "duration": 所要時間・滞在時間が言及されていれば分単位の整数、なければ null
+}
+
+該当する内容がない配列項目は [] を、数値項目は null を返してください。JSONのみを返してください。`, dealName, text)
+
+	reqBody, _ := json.Marshal(map[string]any{
+		"model":      "claude-haiku-4-5-20251001",
+		"max_tokens": 1024,
+		"messages": []map[string]any{
+			{"role": "user", "content": prompt},
+		},
+	})
+
+	httpReq, err := http.NewRequest("POST", "https://api.anthropic.com/v1/messages", bytes.NewReader(reqBody))
+	if err != nil {
+		return nil, fmt.Errorf("リクエスト生成に失敗しました: %v", err)
+	}
+	httpReq.Header.Set("x-api-key", apiKey)
+	httpReq.Header.Set("anthropic-version", "2023-06-01")
+	httpReq.Header.Set("content-type", "application/json")
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("Claude API呼び出しに失敗しました: %v", err)
+	}
+	defer resp.Body.Close()
+
+	var apiResp struct {
+		Content []struct {
+			Text string `json:"text"`
+		} `json:"content"`
+		Error struct {
+			Message string `json:"message"`
+		} `json:"error"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		return nil, fmt.Errorf("APIレスポンスの解析に失敗しました")
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("Claude APIエラー: %s", apiResp.Error.Message)
+	}
+	if len(apiResp.Content) == 0 {
+		return nil, fmt.Errorf("AIからの応答が空でした")
+	}
+
+	var result structuredActivity
+	if err := json.Unmarshal([]byte(apiResp.Content[0].Text), &result); err != nil {
+		result.Summary = apiResp.Content[0].Text
+	}
+	return &result, nil
 }
 
 // ---------- ユーティリティ ----------

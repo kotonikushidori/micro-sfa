@@ -114,6 +114,7 @@ export const ACTIVITY_TYPES = [
   { key: 'call',         label: '電話',           icon: '📞', manual: true  },
   { key: 'email',        label: 'メール',         icon: '📧', manual: true  },
   { key: 'memo',         label: 'メモ',           icon: '📝', manual: true  },
+  { key: 'voice_memo',   label: '音声メモ',       icon: '🎤', manual: true  },
   { key: 'phase_change',      label: 'Phase変更',      icon: '🔄', manual: false },
   { key: 'bant_change',       label: 'BANTスコア変更', icon: '📊', manual: false },
   { key: 'close_date_change', label: '期日変更',        icon: '📅', manual: false },

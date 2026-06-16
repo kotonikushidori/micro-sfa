@@ -894,9 +894,42 @@ canvas { max-width: 100%; }
 .activity-item--call         { border-left-color: #3b82f6; }
 .activity-item--email        { border-left-color: #8b5cf6; }
 .activity-item--memo         { border-left-color: #f59e0b; }
+.activity-item--voice_memo   { border-left-color: #ec4899; background: #fdf2f8; }
 .activity-item--phase_change      { border-left-color: #06b6d4; background: #ecfeff; }
 .activity-item--bant_change       { border-left-color: #f97316; background: #fff7ed; }
 .activity-item--close_date_change { border-left-color: #a855f7; background: #faf5ff; }
+
+/* 音声入力 */
+.voice-input-row   { display: flex; align-items: center; gap: 10px; }
+.btn-voice {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 14px; border: 1px solid var(--color-border);
+  border-radius: var(--radius); background: var(--color-bg);
+  font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
+  color: var(--color-text); transition: background 0.15s, border-color 0.15s;
+}
+.btn-voice:hover { background: #f1f5f9; border-color: var(--color-primary); }
+.btn-voice--recording {
+  background: #fef2f2; border-color: #ef4444; color: #ef4444;
+  animation: pulse-border 1.2s ease-in-out infinite;
+}
+@keyframes pulse-border {
+  0%, 100% { border-color: #ef4444; }
+  50%       { border-color: #fca5a5; }
+}
+.voice-status            { font-size: 12px; color: var(--color-muted); }
+.voice-status--recording { color: #ef4444; font-weight: 500; }
+.voice-status--done      { color: #16a34a; }
+.voice-status--error     { color: #ef4444; }
+
+/* AI 整理バー */
+.act-ai-bar  { display: flex; align-items: center; gap: 10px; }
+.act-ai-hint { font-size: 12px; color: var(--color-muted); }
+.act-ai-alert {
+  display: flex; align-items: flex-start; gap: 6px;
+  padding: 10px 14px; background: #fffbeb; border: 1px solid #fcd34d;
+  border-radius: var(--radius); font-size: 13px; color: #92400e; line-height: 1.5;
+}
 
 .activity-item-header {
   display: flex;
