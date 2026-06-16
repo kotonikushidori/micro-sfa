@@ -490,6 +490,10 @@ export function renderActivitySection(container, dealId) {
   const aiBar      = document.getElementById('act-ai-bar')
   const aiAlert    = document.getElementById('act-ai-alert')
 
+  // AI で抽出したコスト・時間をクロージャで保持（フォーム経由より確実）
+  let aiCost     = null
+  let aiDuration = null
+
   actContent.addEventListener('input', () => {
     const hasText = actContent.value.trim() !== ''
     actSubmit.disabled = !hasText
@@ -537,18 +541,19 @@ export function renderActivitySection(container, dealId) {
         lines.push('\n▶ 顧客の宿題')
         data.customerTasks.forEach(t => lines.push(`• ${t}`))
       }
-      lines.push('\n─────────────────────')
-      lines.push(`【音声原文】\n${text}`)
 
       actContent.value = lines.join('\n')
       actSubmit.disabled = false
 
-      // 交通費・所要時間が取れた場合は訪問種別に切り替えて自動セット
-      if (data.cost != null || data.duration != null) {
+      // 交通費・所要時間をクロージャ変数に保存し、フォームにも反映
+      aiCost     = data.cost     ?? null
+      aiDuration = data.duration ?? null
+
+      if (aiCost != null || aiDuration != null) {
         actType.value = 'visit'
         toggleVisitFields()
-        if (data.cost != null)     document.getElementById('act-cost').value     = data.cost
-        if (data.duration != null) document.getElementById('act-duration').value = data.duration
+        if (aiCost != null)     document.getElementById('act-cost').value     = aiCost
+        if (aiDuration != null) document.getElementById('act-duration').value = aiDuration
       } else {
         actType.value = 'voice_memo'
         toggleVisitFields()
@@ -603,10 +608,19 @@ export function renderActivitySection(container, dealId) {
       author_name: author.name,
       createdAt:   new Date().toISOString(),
     }
+    // フォーム入力を優先、なければ AI 抽出値を使用
     if (type === 'visit') {
-      if (costVal)     record.cost     = Number(costVal)
-      if (durationVal) record.duration = Number(durationVal)
+      const cost = costVal ? Number(costVal) : aiCost
+      const dur  = durationVal ? Number(durationVal) : aiDuration
+      if (cost != null) record.cost     = cost
+      if (dur  != null) record.duration = dur
+    } else if (aiCost != null || aiDuration != null) {
+      // voice_memo でも AI が抽出していれば保存
+      if (aiCost     != null) record.cost     = aiCost
+      if (aiDuration != null) record.duration = aiDuration
     }
+    aiCost = null
+    aiDuration = null
     await appendActivity(record)
 
     AppState.activities.unshift(record)
@@ -701,7 +715,7 @@ function renderActivityList(activities) {
   }
   return activities.map(a => {
     const typeDef = ACTIVITY_TYPES.find(t => t.key === a.type)
-    const visitMeta = a.type === 'visit' && (a.cost || a.duration)
+    const visitMeta = (a.cost || a.duration)
       ? `<span class="activity-visit-meta">${a.cost ? `🚃 ${a.cost.toLocaleString()}円` : ''}${a.cost && a.duration ? '　' : ''}${a.duration ? `⏱ ${a.duration}分` : ''}</span>`
       : ''
     return `
