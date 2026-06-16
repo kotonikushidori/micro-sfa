@@ -39,7 +39,7 @@ func Migrate(db *sql.DB) error {
 	}
 	// 既存DBへの列追加（IF NOT EXISTSがSQLiteのALTER TABLEでは使えないためエラーを無視）
 	db.Exec(`ALTER TABLE users ADD COLUMN email TEXT`)
-	db.Exec(`ALTER TABLE users ADD COLUMN google_id TEXT UNIQUE`)
+	db.Exec(`ALTER TABLE users ADD COLUMN google_id TEXT`)
 	return nil
 }
 
