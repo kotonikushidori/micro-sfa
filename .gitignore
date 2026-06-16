@@ -1,0 +1,5 @@
+.env
+sfa.db
+sfa.db-shm
+sfa.db-wal
+*.png

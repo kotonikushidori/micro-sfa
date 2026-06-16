@@ -6,6 +6,8 @@ services:
     container_name: micro-sfa-app
     ports:
       - "127.0.0.1:8989:8080"
+    env_file:
+      - .env
     environment:
       PORT: "8080"
       DATABASE_URL: "/data/sfa.db"
