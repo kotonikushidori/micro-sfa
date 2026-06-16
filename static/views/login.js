@@ -2,13 +2,6 @@
 import { loginAPI } from '/data.js'
 import { login } from '/app.js'
 
-const DEMO_ACCOUNTS = [
-  { name: '田中 一郎', role: 'sales',     label: '営業（sales）' },
-  { name: '山田 部長', role: 'manager',   label: 'マネージャー（manager）' },
-  { name: '社長',      role: 'executive', label: '経営幹部（executive）' },
-  { name: 'admin',     role: 'admin',     label: '管理者（admin）' },
-]
-
 const AUTH_ERROR_MESSAGES = {
   not_registered:        'このGoogleアカウントは登録されていません。管理者にお問い合わせください。',
   inactive:              'アカウントが無効になっています。管理者にお問い合わせください。',
@@ -39,16 +32,7 @@ export function renderLogin(root) {
           Googleアカウントでログイン
         </a>
 
-        <div class="login-divider"><span>または手入力（デモ用）</span></div>
-
-        <div class="demo-accounts">
-          <p class="demo-title">デモアカウントで試す</p>
-          ${DEMO_ACCOUNTS.map(a => `
-            <button type="button" class="btn btn-demo-account" data-name="${a.name}">
-              ${a.label}
-            </button>
-          `).join('')}
-        </div>
+        <div class="login-divider"><span>または</span></div>
 
         <form id="login-form" class="login-form">
           <div class="form-group">
@@ -79,10 +63,6 @@ export function renderLogin(root) {
       errorEl.classList.remove('hidden')
     }
   }
-
-  root.querySelectorAll('.btn-demo-account').forEach(btn => {
-    btn.addEventListener('click', () => doLogin(btn.dataset.name, 'demo1234'))
-  })
 
   document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault()
