@@ -18,7 +18,7 @@ func New(db *sql.DB) *DB { return &DB{db} }
 
 func (r *DB) ListUsers() ([]User, error) {
 	rows, err := r.db.Query(
-		`SELECT id,name,dept_id,role,is_active,created_at FROM users ORDER BY created_at`)
+		`SELECT id,name,dept_id,role,email,is_active,created_at FROM users ORDER BY created_at`)
 	if err != nil {
 		return nil, err
 	}
@@ -27,10 +27,12 @@ func (r *DB) ListUsers() ([]User, error) {
 	for rows.Next() {
 		var u User
 		var active int
-		if err := rows.Scan(&u.ID, &u.Name, &u.DeptID, &u.Role, &active, &u.CreatedAt); err != nil {
+		var email sql.NullString
+		if err := rows.Scan(&u.ID, &u.Name, &u.DeptID, &u.Role, &email, &active, &u.CreatedAt); err != nil {
 			return nil, err
 		}
 		u.IsActive = active == 1
+		u.Email = email.String
 		users = append(users, u)
 	}
 	return users, rows.Err()
@@ -39,9 +41,10 @@ func (r *DB) ListUsers() ([]User, error) {
 func (r *DB) GetUserByName(name string) (*User, error) {
 	var u User
 	var active int
+	var email sql.NullString
 	err := r.db.QueryRow(
-		`SELECT id,name,dept_id,role,password,is_active,created_at FROM users WHERE name=?`, name,
-	).Scan(&u.ID, &u.Name, &u.DeptID, &u.Role, &u.Password, &active, &u.CreatedAt)
+		`SELECT id,name,dept_id,role,password,email,is_active,created_at FROM users WHERE name=?`, name,
+	).Scan(&u.ID, &u.Name, &u.DeptID, &u.Role, &u.Password, &email, &active, &u.CreatedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -49,15 +52,17 @@ func (r *DB) GetUserByName(name string) (*User, error) {
 		return nil, err
 	}
 	u.IsActive = active == 1
+	u.Email = email.String
 	return &u, nil
 }
 
 func (r *DB) GetUser(id string) (*User, error) {
 	var u User
 	var active int
+	var email sql.NullString
 	err := r.db.QueryRow(
-		`SELECT id,name,dept_id,role,is_active,created_at FROM users WHERE id=?`, id,
-	).Scan(&u.ID, &u.Name, &u.DeptID, &u.Role, &active, &u.CreatedAt)
+		`SELECT id,name,dept_id,role,email,is_active,created_at FROM users WHERE id=?`, id,
+	).Scan(&u.ID, &u.Name, &u.DeptID, &u.Role, &email, &active, &u.CreatedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -65,21 +70,63 @@ func (r *DB) GetUser(id string) (*User, error) {
 		return nil, err
 	}
 	u.IsActive = active == 1
+	u.Email = email.String
 	return &u, nil
+}
+
+func (r *DB) GetUserByGoogleID(googleID string) (*User, error) {
+	var u User
+	var active int
+	var email sql.NullString
+	err := r.db.QueryRow(
+		`SELECT id,name,dept_id,role,email,is_active,created_at FROM users WHERE google_id=?`, googleID,
+	).Scan(&u.ID, &u.Name, &u.DeptID, &u.Role, &email, &active, &u.CreatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	u.IsActive = active == 1
+	u.Email = email.String
+	return &u, nil
+}
+
+func (r *DB) GetUserByEmail(email string) (*User, error) {
+	var u User
+	var active int
+	var emailNull sql.NullString
+	err := r.db.QueryRow(
+		`SELECT id,name,dept_id,role,email,is_active,created_at FROM users WHERE email=?`, email,
+	).Scan(&u.ID, &u.Name, &u.DeptID, &u.Role, &emailNull, &active, &u.CreatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	u.IsActive = active == 1
+	u.Email = emailNull.String
+	return &u, nil
+}
+
+func (r *DB) LinkGoogleID(userID, googleID string) error {
+	_, err := r.db.Exec(`UPDATE users SET google_id=? WHERE id=?`, googleID, userID)
+	return err
 }
 
 func (r *DB) CreateUser(u *User) error {
 	_, err := r.db.Exec(
-		`INSERT INTO users(id,name,dept_id,role,password,is_active,created_at) VALUES(?,?,?,?,?,?,?)`,
-		u.ID, u.Name, u.DeptID, u.Role, u.Password, boolInt(u.IsActive), u.CreatedAt,
+		`INSERT INTO users(id,name,dept_id,role,password,email,is_active,created_at) VALUES(?,?,?,?,?,?,?,?)`,
+		u.ID, u.Name, u.DeptID, u.Role, u.Password, nullString(u.Email), boolInt(u.IsActive), u.CreatedAt,
 	)
 	return err
 }
 
 func (r *DB) UpdateUser(u *User) error {
 	res, err := r.db.Exec(
-		`UPDATE users SET name=?,dept_id=?,role=?,is_active=? WHERE id=?`,
-		u.Name, u.DeptID, u.Role, boolInt(u.IsActive), u.ID,
+		`UPDATE users SET name=?,dept_id=?,role=?,email=?,is_active=? WHERE id=?`,
+		u.Name, u.DeptID, u.Role, nullString(u.Email), boolInt(u.IsActive), u.ID,
 	)
 	if err != nil {
 		return err
@@ -376,6 +423,13 @@ func nullInt(p *int64) any {
 		return nil
 	}
 	return *p
+}
+
+func nullString(s string) any {
+	if s == "" {
+		return nil
+	}
+	return s
 }
 
 func expectOne(res sql.Result) error {

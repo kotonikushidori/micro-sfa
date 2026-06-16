@@ -17,6 +17,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 	"micro-sfa/repo"
 )
 
@@ -36,6 +38,8 @@ func (app *App) Routes() http.Handler {
 	// 認証不要
 	mux.HandleFunc("POST /auth/login", app.handleLogin)
 	mux.HandleFunc("POST /auth/logout", app.handleLogout)
+	mux.HandleFunc("GET /auth/google", app.handleGoogleLogin)
+	mux.HandleFunc("GET /auth/google/callback", app.handleGoogleCallback)
 
 	// 認証必要
 	auth := app.authMiddleware
@@ -157,6 +161,126 @@ func (app *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	user.Password = "" // パスワードハッシュはレスポンスに含めない
 	writeJSON(w, http.StatusOK, user)
+}
+
+// ---------- Google OAuth ----------
+
+type googleUserInfo struct {
+	Sub   string `json:"sub"`
+	Email string `json:"email"`
+	Name  string `json:"name"`
+}
+
+func googleConfig() *oauth2.Config {
+	return &oauth2.Config{
+		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+		RedirectURL:  os.Getenv("GOOGLE_REDIRECT_URI"),
+		Scopes: []string{
+			"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/userinfo.profile",
+		},
+		Endpoint: google.Endpoint,
+	}
+}
+
+func (app *App) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
+	if os.Getenv("GOOGLE_CLIENT_ID") == "" {
+		http.Redirect(w, r, "/?auth_error=google_not_configured", http.StatusFound)
+		return
+	}
+	state := newToken()
+	http.SetCookie(w, &http.Cookie{
+		Name:     "oauth_state",
+		Value:    state,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   600,
+	})
+	http.Redirect(w, r, googleConfig().AuthCodeURL(state, oauth2.AccessTypeOnline), http.StatusFound)
+}
+
+func (app *App) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
+	stateCookie, err := r.Cookie("oauth_state")
+	if err != nil || stateCookie.Value == "" || stateCookie.Value != r.URL.Query().Get("state") {
+		http.Redirect(w, r, "/?auth_error=invalid_state", http.StatusFound)
+		return
+	}
+	http.SetCookie(w, &http.Cookie{Name: "oauth_state", Value: "", Path: "/", MaxAge: -1})
+
+	code := r.URL.Query().Get("code")
+	if code == "" {
+		http.Redirect(w, r, "/?auth_error=no_code", http.StatusFound)
+		return
+	}
+
+	token, err := googleConfig().Exchange(r.Context(), code)
+	if err != nil {
+		log.Printf("google oauth exchange error: %v", err)
+		http.Redirect(w, r, "/?auth_error=token_exchange_failed", http.StatusFound)
+		return
+	}
+
+	resp, err := googleConfig().Client(r.Context(), token).Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	if err != nil {
+		http.Redirect(w, r, "/?auth_error=userinfo_failed", http.StatusFound)
+		return
+	}
+	defer resp.Body.Close()
+
+	var info googleUserInfo
+	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
+		http.Redirect(w, r, "/?auth_error=userinfo_parse_failed", http.StatusFound)
+		return
+	}
+
+	user, err := app.Repo.GetUserByGoogleID(info.Sub)
+	if err != nil {
+		http.Redirect(w, r, "/?auth_error=db_error", http.StatusFound)
+		return
+	}
+	if user == nil {
+		// 初回ログイン: メールで照合してgoogle_idをリンク
+		user, err = app.Repo.GetUserByEmail(info.Email)
+		if err != nil {
+			http.Redirect(w, r, "/?auth_error=db_error", http.StatusFound)
+			return
+		}
+		if user == nil {
+			http.Redirect(w, r, "/?auth_error=not_registered", http.StatusFound)
+			return
+		}
+		_ = app.Repo.LinkGoogleID(user.ID, info.Sub)
+	}
+
+	if !user.IsActive {
+		http.Redirect(w, r, "/?auth_error=inactive", http.StatusFound)
+		return
+	}
+
+	sessionID := newToken()
+	now := time.Now().UTC()
+	session := &repo.Session{
+		ID:        sessionID,
+		UserID:    user.ID,
+		CreatedAt: now.Format(time.RFC3339),
+		ExpiresAt: now.Add(30 * 24 * time.Hour).Format(time.RFC3339),
+	}
+	if err := app.Repo.CreateSession(session); err != nil {
+		http.Redirect(w, r, "/?auth_error=session_error", http.StatusFound)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "sfa_session",
+		Value:    sessionID,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   30 * 24 * 3600,
+	})
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func (app *App) handleLogout(w http.ResponseWriter, r *http.Request) {

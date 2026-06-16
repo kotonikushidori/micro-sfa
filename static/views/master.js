@@ -99,7 +99,7 @@ function renderUserTab(content) {
         <button id="btn-add-user" class="btn btn-primary">+ ユーザー追加</button>
       </div>
       <table class="data-table">
-        <thead><tr><th>名前</th><th>部署</th><th>ロール</th><th>状態</th><th>操作</th></tr></thead>
+        <thead><tr><th>名前</th><th>部署</th><th>ロール</th><th>Googleメール</th><th>状態</th><th>操作</th></tr></thead>
         <tbody>
           ${users.map(u => {
             const dept = depts.find(d => d.id === u.dept_id)
@@ -112,6 +112,7 @@ function renderUserTab(content) {
                     ${ROLES.map(r => `<option value="${r}" ${u.role === r ? 'selected' : ''}>${r}</option>`).join('')}
                   </select>
                 </td>
+                <td class="email-cell">${u.email || '<span class="text-muted">未設定</span>'}</td>
                 <td>${u.isActive ? '<span class="badge-active">有効</span>' : '<span class="badge-inactive">無効</span>'}</td>
                 <td>
                   <button class="btn btn-sm btn-ghost btn-toggle-user" data-id="${u.id}" data-active="${u.isActive}">
@@ -176,8 +177,12 @@ function showAddUserModal(depts = AppState.depts) {
           </select>
         </div>
         <div class="form-group">
-          <label>パスワード <span class="required">*</span></label>
-          <input type="password" id="new-user-password" required />
+          <label>Gmailアドレス <span class="hint">（Googleログイン用）</span></label>
+          <input type="email" id="new-user-email" placeholder="example@gmail.com" />
+        </div>
+        <div class="form-group">
+          <label>パスワード <span class="hint">（Googleログイン不要の場合のみ）</span></label>
+          <input type="password" id="new-user-password" />
         </div>
         <div class="form-actions">
           <button type="submit" class="btn btn-primary">追加</button>
@@ -195,10 +200,16 @@ function showAddUserModal(depts = AppState.depts) {
     const name     = document.getElementById('new-user-name').value.trim()
     const dept_id  = document.getElementById('new-user-dept').value
     const role     = document.getElementById('new-user-role').value
+    const email    = document.getElementById('new-user-email').value.trim()
     const password = document.getElementById('new-user-password').value
+    if (!email && !password) {
+      alert('Gmailアドレスまたはパスワードのどちらかは必要です。')
+      return
+    }
     await createUser({
       id: `user_${crypto.randomUUID().slice(0, 8)}`,
       name, dept_id, role,
+      email,
       password, // サーバー側でハッシュ化される
       isActive: true, createdAt: new Date().toISOString(),
     })

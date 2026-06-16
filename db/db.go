@@ -34,8 +34,13 @@ func Open(dsn string) (*sql.DB, error) {
 
 // Migrate はスキーマを適用する（べき等）。
 func Migrate(db *sql.DB) error {
-	_, err := db.Exec(schemaSQL)
-	return err
+	if _, err := db.Exec(schemaSQL); err != nil {
+		return err
+	}
+	// 既存DBへの列追加（IF NOT EXISTSがSQLiteのALTER TABLEでは使えないためエラーを無視）
+	db.Exec(`ALTER TABLE users ADD COLUMN email TEXT`)
+	db.Exec(`ALTER TABLE users ADD COLUMN google_id TEXT UNIQUE`)
+	return nil
 }
 
 // Seed はユーザーテーブルが空のときだけデモデータを投入する。

@@ -1,13 +1,15 @@
 // models.go: ドメインモデル定義。JSON タグはフロントエンドの既存フィールド名に合わせる。
 package repo
 
-// User はシステムユーザー。password はレスポンスには含めない（omitempty でなく明示的に除外）。
+// User はシステムユーザー。password/google_id はレスポンスに含めない。
 type User struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
 	DeptID    string `json:"dept_id"`
 	Role      string `json:"role"`
+	Email     string `json:"email,omitempty"`
 	Password  string `json:"password,omitempty"`
+	GoogleID  string `json:"-"`
 	IsActive  bool   `json:"isActive"`
 	CreatedAt string `json:"createdAt"`
 }

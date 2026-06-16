@@ -6,7 +6,9 @@ CREATE TABLE IF NOT EXISTS users (
     name       TEXT NOT NULL,
     dept_id    TEXT NOT NULL,
     role       TEXT NOT NULL,
-    password   TEXT NOT NULL,
+    password   TEXT NOT NULL DEFAULT '',
+    email      TEXT,
+    google_id  TEXT UNIQUE,
     is_active  INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL
 );
