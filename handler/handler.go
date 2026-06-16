@@ -11,6 +11,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -63,10 +64,17 @@ func (app *App) Routes() http.Handler {
 
 	mux.Handle("POST /ai/structure-activity", auth(http.HandlerFunc(app.handleStructureActivity)))
 
-	return mux
+	return requestLogger(mux)
 }
 
 // ---------- Middleware ----------
+
+func requestLogger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s", r.Method, r.URL.Path)
+		next.ServeHTTP(w, r)
+	})
+}
 
 func (app *App) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
