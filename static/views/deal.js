@@ -647,33 +647,34 @@ function setupVoiceInput(dealName, actContent, actSubmit, aiBar, aiAlert) {
       isRecording = true
       voiceBtn.textContent = '⏹ 停止'
       voiceBtn.classList.add('btn-voice--recording')
+      actContent.disabled = true
+      actContent.placeholder = '録音中...'
       voiceStatus.textContent = '録音中… 話し終わったら停止してください'
       voiceStatus.className = 'voice-status voice-status--recording'
       aiAlert.classList.add('hidden')
     }
 
     recognition.onresult = (event) => {
-      let interim = ''
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
           finalTranscript += event.results[i][0].transcript
-        } else {
-          interim = event.results[i][0].transcript
         }
       }
-      actContent.value = finalTranscript + interim
-      actSubmit.disabled = actContent.value.trim() === ''
-      if (aiBar) aiBar.classList.toggle('hidden', actContent.value.trim() === '')
     }
 
     recognition.onend = () => {
       isRecording = false
       voiceBtn.textContent = '🎤 音声入力'
       voiceBtn.classList.remove('btn-voice--recording')
-      if (actContent.value.trim()) {
+      actContent.disabled = false
+      actContent.placeholder = '内容を入力（訪問先、話した内容、次のアクションなど）'
+      actContent.value = finalTranscript
+      const hasText = finalTranscript.trim() !== ''
+      actSubmit.disabled = !hasText
+      if (aiBar) aiBar.classList.toggle('hidden', !hasText)
+      if (hasText) {
         voiceStatus.textContent = '録音完了。「AI で整理」を押して構造化できます。'
         voiceStatus.className = 'voice-status voice-status--done'
-        if (aiBar) aiBar.classList.remove('hidden')
       } else {
         voiceStatus.textContent = ''
         voiceStatus.className = 'voice-status'
@@ -684,6 +685,8 @@ function setupVoiceInput(dealName, actContent, actSubmit, aiBar, aiAlert) {
       isRecording = false
       voiceBtn.textContent = '🎤 音声入力'
       voiceBtn.classList.remove('btn-voice--recording')
+      actContent.disabled = false
+      actContent.placeholder = '内容を入力（訪問先、話した内容、次のアクションなど）'
       voiceStatus.textContent = `録音エラー: ${event.error}`
       voiceStatus.className = 'voice-status voice-status--error'
     }
