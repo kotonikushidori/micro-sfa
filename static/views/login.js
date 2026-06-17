@@ -1,6 +1,4 @@
 // login.js: ログイン画面。パスワード検証はサーバー側で行う。
-import { loginAPI } from '/data.js'
-import { login } from '/app.js'
 
 const AUTH_ERROR_MESSAGES = {
   not_registered:        'このGoogleアカウントは登録されていません。管理者にお問い合わせください。',
@@ -32,42 +30,9 @@ export function renderLogin(root) {
           Googleアカウントでログイン
         </a>
 
-        <div class="login-divider"><span>または</span></div>
-
-        <form id="login-form" class="login-form">
-          <div class="form-group">
-            <label for="username">ユーザー名</label>
-            <input type="text" id="username" name="username" autocomplete="username" required />
-          </div>
-          <div class="form-group">
-            <label for="password">パスワード</label>
-            <input type="password" id="password" name="password" autocomplete="current-password" required />
-          </div>
-          <p id="login-error" class="error-msg hidden"></p>
-          <button type="submit" class="btn btn-primary btn-block">ログイン</button>
-        </form>
-
         <a href="#lp" class="btn-lp-link">💡 micro-SFAとは？</a>
       </div>
     </div>
   `
 
-  async function doLogin(name, password) {
-    const errorEl = document.getElementById('login-error')
-    try {
-      const user = await loginAPI(name, password)
-      errorEl.classList.add('hidden')
-      await login(user)
-    } catch (e) {
-      errorEl.textContent = 'ユーザー名またはパスワードが正しくありません'
-      errorEl.classList.remove('hidden')
-    }
-  }
-
-  document.getElementById('login-form').addEventListener('submit', async (e) => {
-    e.preventDefault()
-    const name     = document.getElementById('username').value.trim()
-    const password = document.getElementById('password').value
-    await doLogin(name, password)
-  })
 }
