@@ -73,9 +73,19 @@ func (app *App) Routes() http.Handler {
 
 // ---------- Middleware ----------
 
+func clientIP(r *http.Request) string {
+	if ip := r.Header.Get("X-Forwarded-For"); ip != "" {
+		return strings.SplitN(ip, ",", 2)[0]
+	}
+	if ip := r.Header.Get("X-Real-IP"); ip != "" {
+		return ip
+	}
+	return r.RemoteAddr
+}
+
 func requestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s %s", r.Method, r.URL.Path)
+		log.Printf("ACCESS ip=%s %s %s", clientIP(r), r.Method, r.URL.Path)
 		next.ServeHTTP(w, r)
 	})
 }
@@ -248,6 +258,7 @@ func (app *App) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if user == nil {
+			log.Printf("LOGIN_REJECT ip=%s email=%s reason=not_registered", clientIP(r), info.Email)
 			http.Redirect(w, r, "/?auth_error=not_registered", http.StatusFound)
 			return
 		}
@@ -255,6 +266,7 @@ func (app *App) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !user.IsActive {
+		log.Printf("LOGIN_REJECT ip=%s email=%s reason=inactive", clientIP(r), info.Email)
 		http.Redirect(w, r, "/?auth_error=inactive", http.StatusFound)
 		return
 	}
@@ -272,6 +284,7 @@ func (app *App) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("LOGIN_SUCCESS ip=%s email=%s user=%s role=%s", clientIP(r), info.Email, user.Name, user.Role)
 	http.SetCookie(w, &http.Cookie{
 		Name:     "sfa_session",
 		Value:    sessionID,
