@@ -44,6 +44,15 @@ const NAV_LABELS = {
   '#coach':     '指導ダッシュボード',
 }
 
+const NAV_ICONS = {
+  '#my':        '👤',
+  '#kanban':    '📈',
+  '#forecast':  '💬',
+  '#dashboard': '📊',
+  '#master':    '⚙️',
+  '#coach':     '👥',
+}
+
 function canAccess(role, hash) {
   const base = hash.split('?')[0]
   const config = ROLE_CONFIG[role]
@@ -151,7 +160,7 @@ function updateHeader() {
 
   const config = ROLE_CONFIG[AppState.currentUser.role] || { nav: [] }
   navEl.innerHTML = config.nav
-    .map(h => `<a href="${h}" class="nav-link">${NAV_LABELS[h]}</a>`)
+    .map(h => `<a href="${h}" class="nav-link"><span class="nav-icon">${NAV_ICONS[h]}</span><span class="nav-label">${NAV_LABELS[h]}</span></a>`)
     .join('')
 
   const introLink = document.getElementById('header-intro-link')
