@@ -13,8 +13,15 @@
       <nav id="app-nav"></nav>
       <div class="header-right">
         <a id="header-intro-link" href="/manual/intro.html" target="_blank" class="btn btn-ghost btn-sm hidden">🔰 導入の心得</a>
-        <span id="current-user-label"></span>
-        <button id="logout-btn" class="btn btn-ghost">ログアウト</button>
+        <div id="user-menu" class="user-menu">
+          <button id="user-menu-btn" class="user-menu-btn">
+            <span id="current-user-label"></span>
+            <span class="user-menu-chevron">▾</span>
+          </button>
+          <div id="user-menu-dropdown" class="user-menu-dropdown">
+            <button id="logout-btn" class="user-menu-item">ログアウト</button>
+          </div>
+        </div>
       </div>
     </div>
   </header>

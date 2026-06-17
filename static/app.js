@@ -170,6 +170,19 @@ async function init() {
   updateHeader()
 
   document.getElementById('logout-btn').addEventListener('click', logout)
+
+  const userMenuBtn = document.getElementById('user-menu-btn')
+  const userMenuDropdown = document.getElementById('user-menu-dropdown')
+  userMenuBtn.addEventListener('click', e => {
+    e.stopPropagation()
+    const open = userMenuDropdown.classList.toggle('open')
+    userMenuBtn.setAttribute('aria-expanded', String(open))
+  })
+  document.addEventListener('click', () => {
+    userMenuDropdown.classList.remove('open')
+    userMenuBtn.setAttribute('aria-expanded', 'false')
+  })
+
   window.addEventListener('hashchange', () => route())
 
   route()
