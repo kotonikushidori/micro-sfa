@@ -390,11 +390,11 @@ function renderActionCard(deal) {
   const warn    = isWarning(deal)
 
   return `
-    <div class="action-card ${warn ? 'action-card--warn' : ''}">
+    <a href="#deal?id=${deal.id}&from=my" class="action-card action-card--clickable ${warn ? 'action-card--warn' : ''}">
       <div class="action-card-header">
         <div class="action-card-title">
           ${warn ? '<span class="warn-icon">⚠</span>' : ''}
-          <a href="#deal?id=${deal.id}&from=my" class="action-deal-name">${deal.name}</a>
+          <span class="action-deal-name">${deal.name}</span>
         </div>
         <div class="action-card-meta">
           <span class="tag-phase tag-phase--${phase}">Phase ${phase}</span>
@@ -411,6 +411,6 @@ function renderActionCard(deal) {
           </li>
         `).join('')}
       </ul>
-    </div>
+    </a>
   `
 }

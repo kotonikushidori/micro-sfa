@@ -44,50 +44,54 @@ export function renderDeal(root, hash) {
     </div>
     <form id="deal-form" class="deal-form card">
       <section class="form-section">
-        <h3>基本情報</h3>
-        <div class="form-row">
-          <div class="form-group flex-2">
-            <label for="deal-name">案件名 <span class="required">*</span></label>
-            <input type="text" id="deal-name" value="${deal?.name ?? ''}" required />
+        <details class="basic-info-accordion" open>
+          <summary class="basic-info-summary"><h3>基本情報</h3></summary>
+          <div class="basic-info-body">
+            <div class="form-row">
+              <div class="form-group flex-2">
+                <label for="deal-name">案件名 <span class="required">*</span></label>
+                <input type="text" id="deal-name" value="${deal?.name ?? ''}" required />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="deal-amount">売上金額（円） <span class="required">*</span></label>
+                <input type="number" id="deal-amount" min="0" step="10000" value="${deal?.amount ?? ''}" required />
+              </div>
+              <div class="form-group">
+                <label for="deal-cost-amount">仕入れ金額（円） <span class="optional-label">任意</span></label>
+                <input type="number" id="deal-cost-amount" min="0" value="${deal?.costAmount ?? ''}" placeholder="未入力可" />
+              </div>
+              <div class="form-group">
+                <label for="deal-close-date">想定受注日 <span class="required">*</span>${pushCount > 0 ? `<span class="push-badge push-badge--${pushCount >= 3 ? 'danger' : 'warn'}">${pushCount}回期ずれ</span>` : ''}</label>
+                <input type="date" id="deal-close-date" value="${deal?.closeDate ?? ''}" required />
+              </div>
+            </div>
+            <div id="deal-profit-display" class="deal-profit-display hidden"></div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="deal-dept">部署 <span class="required">*</span></label>
+                <select id="deal-dept" ${isSales ? 'disabled' : ''}>
+                  ${activeDepts.map(d => `
+                    <option value="${d.id}" ${(deal?.dept_id ?? AppState.currentUser.dept_id) === d.id ? 'selected' : ''}>
+                      ${d.name}
+                    </option>
+                  `).join('')}
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="deal-assignee">担当者 <span class="required">*</span></label>
+                <select id="deal-assignee" ${isSales ? 'disabled' : ''}>
+                  ${activeUsers.map(u => `
+                    <option value="${u.id}" ${(deal?.assignee_id ?? AppState.currentUser.id) === u.id ? 'selected' : ''}>
+                      ${u.name}
+                    </option>
+                  `).join('')}
+                </select>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="deal-amount">売上金額（円） <span class="required">*</span></label>
-            <input type="number" id="deal-amount" min="0" step="10000" value="${deal?.amount ?? ''}" required />
-          </div>
-          <div class="form-group">
-            <label for="deal-cost-amount">仕入れ金額（円） <span class="optional-label">任意</span></label>
-            <input type="number" id="deal-cost-amount" min="0" value="${deal?.costAmount ?? ''}" placeholder="未入力可" />
-          </div>
-          <div class="form-group">
-            <label for="deal-close-date">想定受注日 <span class="required">*</span>${pushCount > 0 ? `<span class="push-badge push-badge--${pushCount >= 3 ? 'danger' : 'warn'}">${pushCount}回期ずれ</span>` : ''}</label>
-            <input type="date" id="deal-close-date" value="${deal?.closeDate ?? ''}" required />
-          </div>
-        </div>
-        <div id="deal-profit-display" class="deal-profit-display hidden"></div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="deal-dept">部署 <span class="required">*</span></label>
-            <select id="deal-dept" ${isSales ? 'disabled' : ''}>
-              ${activeDepts.map(d => `
-                <option value="${d.id}" ${(deal?.dept_id ?? AppState.currentUser.dept_id) === d.id ? 'selected' : ''}>
-                  ${d.name}
-                </option>
-              `).join('')}
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="deal-assignee">担当者 <span class="required">*</span></label>
-            <select id="deal-assignee" ${isSales ? 'disabled' : ''}>
-              ${activeUsers.map(u => `
-                <option value="${u.id}" ${(deal?.assignee_id ?? AppState.currentUser.id) === u.id ? 'selected' : ''}>
-                  ${u.name}
-                </option>
-              `).join('')}
-            </select>
-          </div>
-        </div>
+        </details>
       </section>
 
       <section class="form-section">
@@ -228,6 +232,12 @@ export function renderDeal(root, hash) {
   document.getElementById('deal-amount').addEventListener('input', () => { updateScorePreview(); updateProfitDisplay() })
   document.getElementById('deal-cost-amount').addEventListener('input', updateProfitDisplay)
   updateProfitDisplay()
+
+  // モバイルでは基本情報を閉じた状態で表示
+  const basicAccordion = root.querySelector('.basic-info-accordion')
+  if (basicAccordion && window.innerWidth <= 768) {
+    basicAccordion.removeAttribute('open')
+  }
 
   // ボール位置の選択切替とプリセット詳細の動的表示
   function updateBallDetail(ownerKey) {

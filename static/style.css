@@ -511,6 +511,39 @@ body {
 /* ---------- deal form ---------- */
 .deal-form { max-width: 820px; }
 
+/* ---------- 基本情報アコーディオン ---------- */
+.basic-info-accordion { border: none; }
+.basic-info-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  list-style: none;
+  user-select: none;
+  margin-bottom: 12px;
+}
+.basic-info-summary::-webkit-details-marker { display: none; }
+.basic-info-summary h3 { margin: 0; }
+.basic-info-summary::after { display: none; }
+
+@media (max-width: 768px) {
+  .basic-info-summary {
+    cursor: pointer;
+    padding: 10px 0;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .basic-info-summary::after {
+    display: inline;
+    content: '▶';
+    font-size: 11px;
+    color: var(--color-muted);
+    transition: transform 0.2s;
+  }
+  .basic-info-accordion[open] .basic-info-summary::after { transform: rotate(90deg); }
+  .basic-info-accordion[open] .basic-info-summary { border-bottom: none; }
+  .basic-info-body { margin-top: 12px; }
+}
+
 /* ---------- カンバン ---------- */
 .kanban-board {
   display: flex;
@@ -765,6 +798,18 @@ canvas { max-width: 100%; }
 }
 .action-card--warn { border-color: var(--color-warning); background: #fffbeb; }
 .action-card:last-child { margin-bottom: 0; }
+.action-card--clickable {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+}
+.action-card--clickable:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(59,130,246,.12);
+}
+.action-card--clickable:hover .action-deal-name { color: var(--color-primary); }
 
 .action-card-header { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
 .action-card-title  { display: flex; align-items: center; gap: 8px; }
