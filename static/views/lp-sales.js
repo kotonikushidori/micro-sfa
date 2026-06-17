@@ -54,6 +54,9 @@ export function renderLpSales(root) {
         <p class="lp-body-text">ツールを見れば、自分の現在地と弱点がわかる。次に何をすべきかも、データが示す。<br>指示を待つのではなく、データをもとに自分で動ける。そういう営業担当者のためのツールです。</p>
       </div>
 
+      <div class="lp-cta-section">
+        <a href="#login" class="btn-lp-link">ログインはこちら</a>
+      </div>
     </div>
   `
 }

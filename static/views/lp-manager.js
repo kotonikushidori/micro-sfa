@@ -58,6 +58,9 @@ export function renderLpManager(root) {
         <p class="lp-body-text">指摘が「感情」ではなく「データ」になる。マネージャーが言いにくいことは、ツールが先に可視化する。<br>あなたは関係を守ることに集中できる。</p>
       </div>
 
+      <div class="lp-cta-section">
+        <a href="#login" class="btn-lp-link">ログインはこちら</a>
+      </div>
     </div>
   `
 }

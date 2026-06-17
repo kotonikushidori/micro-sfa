@@ -20,6 +20,9 @@ export function renderLp(root) {
           <span class="lp-select-card-arrow">詳しく見る →</span>
         </a>
       </div>
+      <div class="lp-select-footer">
+        <a href="#login" class="btn-lp-link">ログインはこちら</a>
+      </div>
     </div>
   `
 }
