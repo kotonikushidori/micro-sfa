@@ -90,6 +90,11 @@ async function route() {
   const root = document.getElementById('app-root')
 
   if (hash === '#login') {
+    if (AppState.currentUser) {
+      const config = ROLE_CONFIG[AppState.currentUser.role]
+      navigate(config ? config.defaultHash : '#my')
+      return
+    }
     updateHeader()
     root.innerHTML = ''
     renderLogin(root)
