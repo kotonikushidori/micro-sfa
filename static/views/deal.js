@@ -163,11 +163,17 @@ export function renderDeal(root, hash) {
       <div class="form-actions">
         <button type="submit" class="btn btn-primary">${isEdit ? '更新する' : '作成する'}</button>
         <a href="${backDest}" class="btn btn-ghost">キャンセル</a>
-        ${isEdit && !deal.isWon && !deal.isLost ? `
-          <button type="button" id="btn-won"  class="btn btn-success ml-auto">受注</button>
-          <button type="button" id="btn-lost" class="btn btn-danger">失注</button>
-        ` : ''}
       </div>
+      ${isEdit && !deal.isWon && !deal.isLost ? `
+        <hr class="form-close-divider" />
+        <div class="form-close-section">
+          <span class="form-close-label">この案件をクローズする</span>
+          <div class="form-close-actions">
+            <button type="button" id="btn-won"  class="btn btn-success">受注</button>
+            <button type="button" id="btn-lost" class="btn btn-danger">失注</button>
+          </div>
+        </div>
+      ` : ''}
     </form>
   `
 

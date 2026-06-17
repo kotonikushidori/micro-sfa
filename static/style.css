@@ -162,6 +162,11 @@ body {
 
 .form-actions { display: flex; gap: 12px; align-items: center; padding-top: 8px; flex-wrap: wrap; }
 
+.form-close-divider { border: none; border-top: 1px solid var(--color-border); margin: 20px 0 16px; }
+.form-close-section { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.form-close-label { font-size: 12px; color: var(--color-muted); }
+.form-close-actions { display: flex; gap: 8px; }
+
 .optional-label { font-size: 11px; font-weight: 400; color: var(--color-muted); background: #f1f5f9; border-radius: 4px; padding: 1px 5px; margin-left: 4px; }
 .deal-profit-display { font-size: 13px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius); padding: 8px 14px; margin-bottom: 12px; color: #15803d; }
 .deal-profit-display--negative { background: #fff1f2; border-color: #fecdd3; color: #be123c; }
