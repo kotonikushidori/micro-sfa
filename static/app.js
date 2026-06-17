@@ -97,6 +97,7 @@ async function route() {
   const hash = location.hash || '#login'
   AppState.currentHash = hash
   const root = document.getElementById('app-root')
+  updateActiveNav()
 
   if (hash === '#login') {
     if (AppState.currentUser) {
@@ -169,6 +170,15 @@ function updateHeader() {
   } else {
     introLink.classList.add('hidden')
   }
+
+  updateActiveNav()
+}
+
+function updateActiveNav() {
+  const base = (location.hash || '').split('?')[0]
+  document.querySelectorAll('#app-nav .nav-link').forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === base)
+  })
 }
 
 async function init() {

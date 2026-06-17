@@ -71,6 +71,7 @@ body {
   transition: background .15s, color .15s;
 }
 .nav-link:hover { background: var(--color-bg); color: var(--color-text); }
+.nav-link.active { background: var(--color-bg); color: var(--color-primary); font-weight: 600; }
 .nav-icon { font-size: 15px; line-height: 1; }
 
 .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
@@ -1311,7 +1312,18 @@ canvas { max-width: 100%; }
   /* ⑦ ヘッダー：サービス名非表示 / ナビアイコン化 / ユーザーメニュー アコーディオン */
   .app-title { display: none; }
   .nav-label { display: none; }
-  .nav-link { padding: 6px 10px; font-size: 18px; }
+  .nav-link { padding: 6px 10px; font-size: 18px; position: relative; }
+  .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--color-primary);
+  }
   #app-nav { gap: 0; }
   .user-menu-btn { cursor: pointer; }
   .user-menu-chevron { display: inline; }
