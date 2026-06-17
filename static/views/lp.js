@@ -21,7 +21,7 @@ export function renderLp(root) {
         </a>
       </div>
       <div class="lp-select-footer">
-        <a href="#login" class="btn-lp-link">すでにアカウントをお持ちの方はこちら</a>
+        <a href="/api/auth/google" class="btn-lp-link">Googleアカウントでログイン</a>
       </div>
     </div>
   `

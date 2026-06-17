@@ -8,7 +8,7 @@ export function renderLpManager(root) {
         <p class="lp-tagline">マネージャー・チームリーダー向け</p>
         <h1 class="lp-headline">マネジメントの時間を、半分に。</h1>
         <p class="lp-hero-body">チーム全員の状況がリアルタイムで見える。<br>会議も面談も、必要なときだけ。</p>
-        <a href="#login" class="btn btn-primary lp-cta">デモを試す（無料）</a>
+        <a href="/api/auth/google" class="btn btn-primary lp-cta">Googleアカウントでログイン</a>
       </div>
 
       <div class="lp-section">

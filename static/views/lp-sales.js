@@ -8,7 +8,7 @@ export function renderLpSales(root) {
         <p class="lp-tagline">営業担当者向け</p>
         <h1 class="lp-headline">なぜあの人は売れるのか。</h1>
         <p class="lp-hero-body">フェーズとBANTスコアを見れば、<br>自分の何が足りないか一目でわかる。</p>
-        <a href="#login" class="btn btn-primary lp-cta">デモを試す（無料）</a>
+        <a href="/api/auth/google" class="btn btn-primary lp-cta">Googleアカウントでログイン</a>
       </div>
 
       <div class="lp-section">
