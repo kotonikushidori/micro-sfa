@@ -71,7 +71,7 @@ body {
   transition: background .15s, color .15s;
 }
 .nav-link:hover { background: var(--color-bg); color: var(--color-text); }
-.nav-link.active { background: var(--color-bg); color: var(--color-primary); font-weight: 600; }
+.nav-link.active { background: rgba(59,130,246,.15); color: var(--color-primary); font-weight: 600; }
 .nav-icon { font-size: 15px; line-height: 1; }
 
 .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
