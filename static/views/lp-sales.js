@@ -56,8 +56,7 @@ export function renderLpSales(root) {
       </div>
 
       <div class="lp-cta-section">
-        <p class="lp-cta-lead">デモアカウントで今すぐ体験できます</p>
-        <a href="#login" class="btn btn-primary lp-cta">ログイン画面へ</a>
+        <a href="/api/auth/google" class="btn btn-primary lp-cta">Googleアカウントでログイン</a>
       </div>
     </div>
   `
