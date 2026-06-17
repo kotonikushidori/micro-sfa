@@ -222,7 +222,7 @@ func (app *App) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := googleConfig().Client(r.Context(), token).Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	resp, err := googleConfig().Client(r.Context(), token).Get("https://www.googleapis.com/oauth2/v3/userinfo")
 	if err != nil {
 		http.Redirect(w, r, "/?auth_error=userinfo_failed", http.StatusFound)
 		return
