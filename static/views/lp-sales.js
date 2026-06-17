@@ -8,7 +8,6 @@ export function renderLpSales(root) {
         <p class="lp-tagline">営業担当者向け</p>
         <h1 class="lp-headline">なぜあの人は売れるのか。</h1>
         <p class="lp-hero-body">フェーズとBANTスコアを見れば、<br>自分の何が足りないか一目でわかる。</p>
-        <a href="/api/auth/google" class="btn btn-primary lp-cta">Googleアカウントでログイン</a>
       </div>
 
       <div class="lp-section">
@@ -55,9 +54,6 @@ export function renderLpSales(root) {
         <p class="lp-body-text">ツールを見れば、自分の現在地と弱点がわかる。次に何をすべきかも、データが示す。<br>指示を待つのではなく、データをもとに自分で動ける。そういう営業担当者のためのツールです。</p>
       </div>
 
-      <div class="lp-cta-section">
-        <a href="/api/auth/google" class="btn btn-primary lp-cta">Googleアカウントでログイン</a>
-      </div>
     </div>
   `
 }

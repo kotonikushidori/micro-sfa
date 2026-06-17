@@ -20,9 +20,6 @@ export function renderLp(root) {
           <span class="lp-select-card-arrow">詳しく見る →</span>
         </a>
       </div>
-      <div class="lp-select-footer">
-        <a href="/api/auth/google" class="btn-lp-link">Googleアカウントでログイン</a>
-      </div>
     </div>
   `
 }
