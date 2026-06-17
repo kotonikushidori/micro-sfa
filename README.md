@@ -418,6 +418,46 @@ admin がトリガーを設定し（受注済み・失注済み・Phase到達・
 
 ---
 
+## 本番運用メンテ手順
+
+### サーバー接続・DB操作
+
+SSHでサーバーに接続し、`~/micro-sfa` に移動する。
+
+DB操作が必要な場合は一時コンテナ経由で sqlite3 を起動する：
+
+```bash
+docker run --rm -it -v micro-sfa_db-data:/data alpine sh -c "apk add --no-cache sqlite && sqlite3 /data/sfa.db"
+```
+
+### 新しいユーザーを追加する（Googleログイン用）
+
+マスター管理画面（admin ロール）から追加するのが通常の手順。  
+DB直接操作が必要な場合：
+
+```sql
+INSERT INTO users(id, name, dept_id, role, password, email, is_active, created_at)
+VALUES('user_xxx', '名前', '<DEPT_ID>', 'sales', '', '<USER_GMAIL>', 1, datetime('now'));
+```
+
+### Googleアカウントを admin にリンクする
+
+```sql
+UPDATE users SET email = '<YOUR_GMAIL>' WHERE name = 'admin';
+```
+
+### デプロイ（コード更新時）
+
+```bash
+git pull && docker compose -f docker-compose.prod.yml up -d --build --force-recreate
+```
+
+### 環境変数（.env）
+
+`.env.example` を参考に `.env` を作成する。`.env` 自体はgit管理外。
+
+---
+
 ## ライセンス
 
 MIT
