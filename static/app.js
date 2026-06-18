@@ -129,6 +129,7 @@ async function route() {
 
   await refreshState()
   root.innerHTML = ''
+  window.scrollTo(0, 0)
 
   switch (base) {
     case '#my':        renderMy(root);            break
