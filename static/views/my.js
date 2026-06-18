@@ -363,10 +363,10 @@ function renderWaitingCard(deal) {
   const days    = Math.ceil((new Date(deal.closeDate) - new Date()) / 86400000)
 
   return `
-    <div class="action-card action-card--waiting">
+    <a href="#deal?id=${deal.id}&from=my" class="action-card action-card--clickable action-card--waiting">
       <div class="action-card-header">
         <div class="action-card-title">
-          <a href="#deal?id=${deal.id}&from=my" class="action-deal-name">${deal.name}</a>
+          <span class="action-deal-name">${deal.name}</span>
         </div>
         <div class="action-card-meta">
           <span class="tag-phase tag-phase--${phase}">Phase ${phase}</span>
@@ -377,7 +377,7 @@ function renderWaitingCard(deal) {
         </div>
       </div>
       ${deal.ballDetail ? `<div class="waiting-detail">${owner?.icon ?? ''} ${deal.ballDetail}</div>` : ''}
-    </div>
+    </a>
   `
 }
 
