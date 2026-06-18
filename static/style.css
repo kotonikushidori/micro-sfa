@@ -1009,6 +1009,7 @@ canvas { max-width: 100%; }
 /* AI 整理バー */
 .act-ai-bar  { display: flex; align-items: center; gap: 10px; }
 .act-ai-hint { font-size: 12px; color: var(--color-muted); }
+.act-no-next-alert { font-size: 12px; color: var(--color-muted); padding-top: 4px; }
 .act-ai-alert {
   display: flex; align-items: flex-start; gap: 6px;
   padding: 10px 14px; background: #fffbeb; border: 1px solid #fcd34d;

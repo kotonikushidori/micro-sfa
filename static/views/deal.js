@@ -473,7 +473,7 @@ export function renderActivitySection(container, dealId) {
         </div>
         ` : ''}
 
-        <textarea id="act-content" class="activity-textarea" placeholder="内容を入力（訪問先、話した内容、次のアクションなど）" rows="3"></textarea>
+        <textarea id="act-content" class="activity-textarea" placeholder="内容を入力&#10;[next] 次のアクション&#10;[mine] 自分の宿題&#10;[cust] 相手の宿題" rows="3"></textarea>
 
         <div id="act-ai-bar" class="act-ai-bar hidden">
           <button type="button" id="act-ai-btn" class="btn btn-ghost btn-sm">✨ AI で整理</button>
@@ -485,6 +485,7 @@ export function renderActivitySection(container, dealId) {
         </div>
 
         <button type="submit" id="act-submit" class="btn btn-primary btn-act-submit" disabled>記録する</button>
+        <div id="act-no-next-alert" class="act-no-next-alert hidden">[next] がありません。このまま記録します。</div>
       </form>
 
       <div id="activity-list" class="activity-list">
@@ -545,18 +546,9 @@ export function renderActivitySection(container, dealId) {
 
       const lines = []
       if (data.summary) lines.push(data.summary)
-      if (data.nextActions?.length) {
-        lines.push('\n▶ 次のアクション')
-        data.nextActions.forEach(a => lines.push(`• ${a}`))
-      }
-      if (data.myTasks?.length) {
-        lines.push('\n▶ 自分の宿題')
-        data.myTasks.forEach(t => lines.push(`• ${t}`))
-      }
-      if (data.customerTasks?.length) {
-        lines.push('\n▶ 顧客の宿題')
-        data.customerTasks.forEach(t => lines.push(`• ${t}`))
-      }
+      data.nextActions?.forEach(a => lines.push(`[next] ${a}`))
+      data.myTasks?.forEach(t => lines.push(`[mine] ${t}`))
+      data.customerTasks?.forEach(t => lines.push(`[cust] ${t}`))
 
       actContent.value = lines.join('\n')
       actSubmit.disabled = false
@@ -603,12 +595,17 @@ export function renderActivitySection(container, dealId) {
     }
   })
 
+  const noNextAlert = document.getElementById('act-no-next-alert')
+
   document.getElementById('activity-form').addEventListener('submit', async (e) => {
     e.preventDefault()
     const type    = document.getElementById('act-type').value
     const date    = document.getElementById('act-date').value
     const content = actContent.value.trim()
     if (!content) return
+
+    // [next] タグがなければ非ブロックで通知
+    if (noNextAlert) noNextAlert.classList.toggle('hidden', /^\[next\b/im.test(content))
 
     const costVal     = document.getElementById('act-cost').value
     const durationVal = document.getElementById('act-duration').value
@@ -642,8 +639,9 @@ export function renderActivitySection(container, dealId) {
     AppState.activities.unshift(record)
     actContent.value = ''
     actSubmit.disabled = true
-    if (aiBar)   aiBar.classList.add('hidden')
-    if (aiAlert) aiAlert.classList.add('hidden')
+    if (aiBar)       aiBar.classList.add('hidden')
+    if (aiAlert)     aiAlert.classList.add('hidden')
+    if (noNextAlert) noNextAlert.classList.add('hidden')
     const voiceStatus = document.getElementById('act-voice-status')
     if (voiceStatus) voiceStatus.textContent = ''
     document.getElementById('activity-list').innerHTML =
