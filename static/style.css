@@ -1424,7 +1424,9 @@ canvas { max-width: 100%; }
 }
 
 /* ボトムナビはデスクトップでは常に非表示 */
-.bottom-nav { display: none; }
+@media (min-width: 769px) {
+  .bottom-nav { display: none; }
+}
 
 /* ========== コンタクト管理 ========== */
 
