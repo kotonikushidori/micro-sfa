@@ -14,6 +14,7 @@ import { renderLpSales } from '/views/lp-sales.js'
 import { renderLpManager } from '/views/lp-manager.js'
 import { renderContacts } from '/views/contacts.js'
 import { renderContactQuick } from '/views/contact-quick.js'
+import { renderContact } from '/views/contact.js'
 
 // ✅ 状態はすべて AppState に一元管理。各 view は AppState を読み書きする。
 export const AppState = {
@@ -150,6 +151,7 @@ async function route() {
     case '#coach':          renderCoach(root);                 break
     case '#contacts':       renderContacts(root);              break
     case '#contact-quick':  renderContactQuick(root);          break
+    case '#contact':        renderContact(root, hash);         break
     default: root.innerHTML = '<p class="not-found">ページが見つかりません</p>'
   }
 }

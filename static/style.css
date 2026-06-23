@@ -1481,8 +1481,12 @@ canvas { max-width: 100%; }
 .contact-card {
   padding: 14px 16px;
   margin-bottom: 10px;
-  cursor: default;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: box-shadow .15s;
 }
+.contact-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,.10); }
 .contact-card-header {
   display: flex;
   align-items: flex-start;
@@ -1682,4 +1686,133 @@ canvas { max-width: 100%; }
   .contact-quick-wrap { max-width: 100%; }
   .cq-label-buttons { gap: 6px; }
   .cq-label-btn { font-size: 13px; padding: 10px 4px; }
+}
+
+/* ========== コンタクト詳細画面 ========== */
+
+.contact-detail-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 720px;
+}
+
+.contact-card-image-wrap { text-align: center; }
+.contact-card-image {
+  max-width: 100%;
+  max-height: 220px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  object-fit: contain;
+}
+
+.cd-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin: 0 0 14px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.form-group--full { grid-column: 1 / -1; }
+
+/* フェーズステッパー */
+.contact-phase-stepper {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.phase-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  min-width: 52px;
+}
+.phase-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 9px;
+  left: calc(50% + 10px);
+  right: calc(-50% + 10px);
+  height: 2px;
+  background: var(--color-border);
+}
+.phase-step.done::after { background: var(--color-primary); }
+.phase-step-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+  z-index: 1;
+  flex-shrink: 0;
+}
+.phase-step.done .phase-step-dot {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.phase-step.current .phase-step-dot {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+.phase-step-label {
+  font-size: 10px;
+  color: var(--color-muted);
+  text-align: center;
+  margin-top: 5px;
+  line-height: 1.3;
+}
+.phase-step.current .phase-step-label { color: var(--color-primary); font-weight: 700; }
+.phase-step.done    .phase-step-label { color: var(--color-text); }
+
+/* チェックリスト */
+.contact-checklist { margin: 4px 0 0; }
+.checklist-phase-label {
+  font-size: 12px;
+  color: var(--color-muted);
+  margin-bottom: 10px;
+}
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  font-size: 14px;
+  user-select: none;
+}
+.checklist-item:last-child { border-bottom: none; }
+.checklist-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+.phase-completed-msg {
+  text-align: center;
+  padding: 14px;
+  font-size: 14px;
+  color: #166534;
+  background: #dcfce7;
+  border-radius: var(--radius);
+  margin-top: 12px;
+}
+
+.contact-detail-actions { margin-bottom: 8px; }
+
+@media (max-width: 480px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .form-group--full { grid-column: 1; }
 }

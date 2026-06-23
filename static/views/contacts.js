@@ -74,7 +74,7 @@ function renderContactCard(c) {
   const sub         = (c.name && c.companyName) ? c.companyName : (c.quickMemo || '')
 
   return `
-    <div class="contact-card card">
+    <a class="contact-card card" href="#contact?id=${c.id}">
       <div class="contact-card-header">
         <div class="contact-card-name">
           ${displayName}
@@ -93,6 +93,6 @@ function renderContactCard(c) {
         ${phase ? `<span class="contact-meta-item contact-phase-tag">${phase.label}</span>` : ''}
         ${c.cardImageUrl ? `<span class="contact-meta-item">📷</span>` : ''}
       </div>
-    </div>
+    </a>
   `
 }
