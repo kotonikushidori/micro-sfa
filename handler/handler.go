@@ -24,7 +24,8 @@ import (
 )
 
 type App struct {
-	Repo *repo.DB
+	Repo      *repo.DB
+	UploadDir string
 }
 
 type ctxKey string
@@ -619,7 +620,7 @@ func (app *App) handleCreateContact(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusBadRequest, "invalid image data")
 			return
 		}
-		imgPath := fmt.Sprintf("./uploads/cards/%s.jpg", c.ID)
+		imgPath := fmt.Sprintf("%s/cards/%s.jpg", app.UploadDir, c.ID)
 		if err := os.WriteFile(imgPath, imgData, 0644); err != nil {
 			log.Printf("image save error: %v", err)
 		} else {
@@ -671,7 +672,7 @@ func (app *App) handleContactOCR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	imgPath := "." + c.CardImageURL
+	imgPath := fmt.Sprintf("%s/cards/%s.jpg", app.UploadDir, c.ID)
 	imgData, err := os.ReadFile(imgPath)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "画像の読み込みに失敗しました")
