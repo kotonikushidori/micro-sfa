@@ -101,15 +101,26 @@ export function renderContactQuick(root) {
   imageInput.addEventListener('change', () => {
     const file = imageInput.files[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const dataUrl = e.target.result
-      imageBase64 = dataUrl.split(',')[1]
-      previewImg.src = dataUrl
-      previewWrap.classList.remove('hidden')
-      takePhotoBtn.classList.add('hidden')
+    const img = new Image()
+    const objectUrl = URL.createObjectURL(file)
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width  = img.naturalWidth
+      canvas.height = img.naturalHeight
+      canvas.getContext('2d').drawImage(img, 0, 0)
+      URL.revokeObjectURL(objectUrl)
+      canvas.toBlob((blob) => {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          imageBase64 = e.target.result.split(',')[1]
+          previewImg.src = e.target.result
+          previewWrap.classList.remove('hidden')
+          takePhotoBtn.classList.add('hidden')
+        }
+        reader.readAsDataURL(blob)
+      }, 'image/webp', 0.85)
     }
-    reader.readAsDataURL(file)
+    img.src = objectUrl
   })
 
   imageClearBtn.addEventListener('click', () => {

@@ -620,11 +620,11 @@ func (app *App) handleCreateContact(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusBadRequest, "invalid image data")
 			return
 		}
-		imgPath := fmt.Sprintf("%s/cards/%s.jpg", app.UploadDir, c.ID)
+		imgPath := fmt.Sprintf("%s/cards/%s.webp", app.UploadDir, c.ID)
 		if err := os.WriteFile(imgPath, imgData, 0644); err != nil {
 			log.Printf("image save error: %v", err)
 		} else {
-			c.CardImageURL = fmt.Sprintf("/uploads/cards/%s.jpg", c.ID)
+			c.CardImageURL = fmt.Sprintf("/uploads/cards/%s.webp", c.ID)
 		}
 	}
 
@@ -672,7 +672,7 @@ func (app *App) handleContactOCR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	imgPath := fmt.Sprintf("%s/cards/%s.jpg", app.UploadDir, c.ID)
+	imgPath := fmt.Sprintf("%s/cards/%s.webp", app.UploadDir, c.ID)
 	imgData, err := os.ReadFile(imgPath)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "画像の読み込みに失敗しました")
@@ -707,7 +707,7 @@ func callClaudeOCR(imgBase64, apiKey string) (string, error) {
 						"type": "image",
 						"source": map[string]any{
 							"type":       "base64",
-							"media_type": "image/jpeg",
+							"media_type": "image/webp",
 							"data":       imgBase64,
 						},
 					},
