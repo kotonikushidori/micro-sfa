@@ -44,7 +44,7 @@ const NAV_LABELS = {
   '#forecast':  'ヨミ会',
   '#dashboard': 'ダッシュボード',
   '#master':    'マスター管理',
-  '#coach':     '指導ダッシュボード',
+  '#coach':     '指導',
   '#contacts':  'コンタクト',
 }
 
@@ -159,12 +159,14 @@ function navigate(hash) {
 }
 
 function updateHeader() {
-  const header  = document.getElementById('app-header')
-  const navEl   = document.getElementById('app-nav')
-  const label   = document.getElementById('current-user-label')
+  const header     = document.getElementById('app-header')
+  const navEl      = document.getElementById('app-nav')
+  const bottomNav  = document.getElementById('bottom-nav')
+  const label      = document.getElementById('current-user-label')
 
   if (!AppState.currentUser) {
     header.classList.add('hidden')
+    bottomNav.classList.add('hidden')
     return
   }
 
@@ -172,9 +174,13 @@ function updateHeader() {
   label.textContent = `${AppState.currentUser.name}（${AppState.currentUser.role}）`
 
   const config = ROLE_CONFIG[AppState.currentUser.role] || { nav: [] }
-  navEl.innerHTML = config.nav
+  const navLinks = config.nav
     .map(h => `<a href="${h}" class="nav-link"><span class="nav-icon">${NAV_ICONS[h]}</span><span class="nav-label">${NAV_LABELS[h]}</span></a>`)
     .join('')
+
+  navEl.innerHTML     = navLinks
+  bottomNav.innerHTML = navLinks
+  bottomNav.classList.remove('hidden')
 
   const introLink = document.getElementById('header-intro-link')
   if (AppState.currentUser.role === 'manager') {
@@ -188,7 +194,7 @@ function updateHeader() {
 
 function updateActiveNav() {
   const base = (location.hash || '').split('?')[0]
-  document.querySelectorAll('#app-nav .nav-link').forEach(a => {
+  document.querySelectorAll('#app-nav .nav-link, #bottom-nav .nav-link').forEach(a => {
     a.classList.toggle('active', a.getAttribute('href') === base)
   })
 }
