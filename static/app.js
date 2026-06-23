@@ -182,13 +182,6 @@ function updateHeader() {
   bottomNav.innerHTML = navLinks
   bottomNav.classList.remove('hidden')
 
-  const introLink = document.getElementById('header-intro-link')
-  if (AppState.currentUser.role === 'manager') {
-    introLink.classList.remove('hidden')
-  } else {
-    introLink.classList.add('hidden')
-  }
-
   updateActiveNav()
 }
 

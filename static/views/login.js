@@ -31,6 +31,7 @@ export function renderLogin(root) {
         </a>
 
         <a href="#lp" class="btn-lp-link">💡 micro-SFAとは？</a>
+        <a href="/manual/intro.html" target="_blank" class="btn-lp-link">🔰 導入の心得</a>
       </div>
     </div>
   `
