@@ -87,3 +87,33 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+
+CREATE TABLE IF NOT EXISTS contacts (
+    id               TEXT PRIMARY KEY,
+    card_image_url   TEXT NOT NULL DEFAULT '',
+    quick_label      TEXT NOT NULL DEFAULT 'followup',
+    quick_memo       TEXT NOT NULL DEFAULT '',
+    event_name       TEXT NOT NULL DEFAULT '',
+    captured_at      TEXT NOT NULL,
+    ocr_status       TEXT NOT NULL DEFAULT 'raw',
+    ocr_raw_text     TEXT NOT NULL DEFAULT '',
+    company_name     TEXT NOT NULL DEFAULT '',
+    department       TEXT NOT NULL DEFAULT '',
+    title            TEXT NOT NULL DEFAULT '',
+    name             TEXT NOT NULL DEFAULT '',
+    address          TEXT NOT NULL DEFAULT '',
+    tel              TEXT NOT NULL DEFAULT '',
+    email            TEXT NOT NULL DEFAULT '',
+    phase            TEXT NOT NULL DEFAULT '',
+    next_action_date TEXT,
+    next_action_memo TEXT NOT NULL DEFAULT '',
+    deal_id          TEXT,
+    referral_count   INTEGER NOT NULL DEFAULT 0,
+    assignee_id      TEXT NOT NULL,
+    assignee_name    TEXT NOT NULL,
+    created_at       TEXT NOT NULL,
+    updated_at       TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_contacts_assignee   ON contacts(assignee_id);
+CREATE INDEX IF NOT EXISTS idx_contacts_ocr_status ON contacts(ocr_status);

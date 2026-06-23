@@ -81,3 +81,30 @@ type Session struct {
 	CreatedAt string
 	ExpiresAt string
 }
+
+type Contact struct {
+	ID             string `json:"id"`
+	CardImageURL   string `json:"cardImageUrl,omitempty"`
+	QuickLabel     string `json:"quickLabel"`
+	QuickMemo      string `json:"quickMemo"`
+	EventName      string `json:"eventName"`
+	CapturedAt     string `json:"capturedAt"`
+	OcrStatus      string `json:"ocrStatus"`
+	OcrRawText     string `json:"ocrRawText"`
+	CompanyName    string `json:"companyName"`
+	Department     string `json:"department"`
+	Title          string `json:"title"`
+	Name           string `json:"name"`
+	Address        string `json:"address"`
+	Tel            string `json:"tel"`
+	Email          string `json:"email"`
+	Phase          string `json:"phase"`
+	NextActionDate string `json:"nextActionDate,omitempty"`
+	NextActionMemo string `json:"nextActionMemo"`
+	DealID         string `json:"dealId,omitempty"`
+	ReferralCount  int    `json:"referralCount"`
+	AssigneeID     string `json:"assignee_id"`
+	AssigneeName   string `json:"assignee_name"`
+	CreatedAt      string `json:"createdAt"`
+	UpdatedAt      string `json:"updatedAt"`
+}

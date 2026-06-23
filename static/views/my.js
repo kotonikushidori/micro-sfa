@@ -85,6 +85,11 @@ export function renderMy(root) {
   // アクション優先順でソート
   const sorted = [...active].sort((a, b) => urgencyScore(b) - urgencyScore(a))
 
+  // 自分の未整備コンタクト
+  const myRawContacts = AppState.contacts.filter(
+    c => c.assignee_id === user.id && c.ocrStatus === 'raw'
+  )
+
   root.innerHTML = `
     <div class="page-header">
       <h2>マイページ</h2>
@@ -92,6 +97,14 @@ export function renderMy(root) {
     </div>
 
     <div class="my-narrow">
+    <!-- 未整備コンタクト通知 -->
+    ${myRawContacts.length > 0 ? `
+      <a href="#contacts" class="contacts-my-reminder">
+        <span class="contacts-reminder-icon">📬</span>
+        <span>未整備の名刺が <strong>${myRawContacts.length} 件</strong> あります — 整備する</span>
+      </a>
+    ` : ''}
+
     <!-- 今すぐやること（ボールが自分にある案件） -->
     ${renderActionSection(sorted)}
 

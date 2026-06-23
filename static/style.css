@@ -1404,3 +1404,243 @@ canvas { max-width: 100%; }
   .user-menu-item:first-child { border-radius: var(--radius) var(--radius) 0 0; }
   .user-menu-item:last-child  { border-radius: 0 0 var(--radius) var(--radius); }
 }
+
+/* ========== コンタクト管理 ========== */
+
+/* ---- 一覧画面 ---- */
+.contacts-unprocessed-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.contacts-unprocessed-icon { font-size: 22px; flex-shrink: 0; }
+.contacts-unprocessed-text { display: flex; flex-direction: column; gap: 2px; }
+.contacts-unprocessed-hint { font-size: 12px; color: var(--color-muted); }
+
+.contacts-all-done-banner {
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #166534;
+  margin-bottom: 16px;
+}
+
+.contacts-filter-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.contact-card {
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  cursor: default;
+}
+.contact-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.contact-card-name {
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.contact-card-sub {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-muted);
+}
+.contact-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.quick-label-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+.ocr-status-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+.ocr-status-badge--raw  { background: #f1f5f9; color: var(--color-muted); }
+.ocr-status-badge--ocr  { background: #eff6ff; color: #2563eb; }
+.ocr-status-badge--done { background: #dcfce7; color: #166534; }
+
+.contact-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+.contact-meta-item { display: flex; align-items: center; gap: 3px; }
+.contact-phase-tag {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1px 8px;
+  font-size: 11px;
+  color: var(--color-text);
+}
+
+/* ---- マイページ：未整備コンタクトバナー ---- */
+.contacts-my-reminder {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  color: #92400e;
+  text-decoration: none;
+  font-size: 14px;
+  transition: background 0.15s;
+}
+.contacts-my-reminder:hover { background: #fde68a; }
+.contacts-reminder-icon { font-size: 20px; }
+
+/* ---- クイック入力画面 ---- */
+.contact-quick-wrap { max-width: 480px; margin: 0 auto; }
+
+.contact-quick-card { padding: 20px; }
+
+.cq-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-muted);
+  margin-bottom: 6px;
+}
+.cq-event-input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-size: 14px;
+}
+.cq-event-input:focus { outline: 2px solid var(--color-primary); border-color: transparent; }
+
+/* 撮影ボタン */
+.cq-image-section { margin: 16px 0; }
+
+.btn-photo-capture {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 18px;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-photo-capture:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+/* 撮影プレビュー */
+.cq-preview-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.cq-preview-img {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  object-fit: contain;
+}
+.cq-clear-btn { align-self: flex-start; }
+
+/* ラベルボタン */
+.cq-label-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.cq-label-btn {
+  padding: 12px 8px;
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  background: var(--lb);
+  color: var(--lc);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.cq-label-btn:active { transform: scale(0.97); }
+.cq-label-btn.selected {
+  border-color: var(--lc);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--lc) 20%, transparent);
+}
+
+/* メモ */
+.cq-memo-textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-size: 14px;
+  resize: vertical;
+  font-family: inherit;
+}
+.cq-memo-textarea:focus { outline: 2px solid var(--color-primary); border-color: transparent; }
+
+/* 保存ボタン */
+.cq-save-btn { margin-top: 8px; font-size: 16px; padding: 14px; }
+.btn-block { width: 100%; }
+
+/* フィードバック */
+.cq-feedback {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  text-align: center;
+  font-weight: 600;
+}
+.cq-feedback--success { background: #dcfce7; color: #166534; }
+.cq-feedback--error   { background: #fee2e2; color: #dc2626; }
+
+/* 保存件数 */
+.cq-saved-count-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+}
+.cq-saved-count { font-size: 14px; font-weight: 600; color: var(--color-muted); }
+
+/* モバイル最適化 */
+@media (max-width: 480px) {
+  .contact-quick-wrap { max-width: 100%; }
+  .cq-label-buttons { gap: 6px; }
+  .cq-label-btn { font-size: 13px; padding: 10px 4px; }
+}

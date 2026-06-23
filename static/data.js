@@ -122,3 +122,21 @@ export async function saveLockConfig(lockConfig) {
     body: JSON.stringify({ ...current, lockConfig }),
   })
 }
+
+// ---------- Contacts ----------
+
+export async function fetchContacts() {
+  return apiFetch('/contacts')
+}
+
+export async function createContact(contact) {
+  return apiFetch('/contacts', { method: 'POST', body: JSON.stringify(contact) })
+}
+
+export async function updateContact(contact) {
+  return apiFetch(`/contacts/${contact.id}`, { method: 'PUT', body: JSON.stringify(contact) })
+}
+
+export async function triggerContactOCR(id) {
+  return apiFetch(`/contacts/${id}/ocr`, { method: 'POST' })
+}

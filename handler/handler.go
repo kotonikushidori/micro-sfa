@@ -8,6 +8,7 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -67,6 +68,12 @@ func (app *App) Routes() http.Handler {
 	mux.Handle("PUT /settings", auth(http.HandlerFunc(app.handleSaveSettings)))
 
 	mux.Handle("POST /ai/structure-activity", auth(http.HandlerFunc(app.handleStructureActivity)))
+
+	mux.Handle("GET /contacts",           auth(http.HandlerFunc(app.handleListContacts)))
+	mux.Handle("POST /contacts",          auth(http.HandlerFunc(app.handleCreateContact)))
+	mux.Handle("GET /contacts/{id}",      auth(http.HandlerFunc(app.handleGetContact)))
+	mux.Handle("PUT /contacts/{id}",      auth(http.HandlerFunc(app.handleUpdateContact)))
+	mux.Handle("POST /contacts/{id}/ocr", auth(http.HandlerFunc(app.handleContactOCR)))
 
 	return requestLogger(mux)
 }
@@ -545,6 +552,206 @@ func (app *App) handleSaveSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, s)
+}
+
+// ---------- Contacts ----------
+
+func (app *App) handleListContacts(w http.ResponseWriter, r *http.Request) {
+	contacts, err := app.Repo.ListContacts()
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if contacts == nil {
+		contacts = []repo.Contact{}
+	}
+	writeJSON(w, http.StatusOK, contacts)
+}
+
+func (app *App) handleGetContact(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	c, err := app.Repo.GetContact(id)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if c == nil {
+		writeError(w, http.StatusNotFound, "contact not found")
+		return
+	}
+	writeJSON(w, http.StatusOK, c)
+}
+
+func (app *App) handleCreateContact(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		ID            string `json:"id"`
+		CardImageData string `json:"cardImageData"`
+		QuickLabel    string `json:"quickLabel"`
+		QuickMemo     string `json:"quickMemo"`
+		EventName     string `json:"eventName"`
+		CapturedAt    string `json:"capturedAt"`
+		AssigneeID    string `json:"assignee_id"`
+		AssigneeName  string `json:"assignee_name"`
+		CreatedAt     string `json:"createdAt"`
+		UpdatedAt     string `json:"updatedAt"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request")
+		return
+	}
+
+	c := repo.Contact{
+		ID:           req.ID,
+		QuickLabel:   req.QuickLabel,
+		QuickMemo:    req.QuickMemo,
+		EventName:    req.EventName,
+		CapturedAt:   req.CapturedAt,
+		OcrStatus:    "raw",
+		AssigneeID:   req.AssigneeID,
+		AssigneeName: req.AssigneeName,
+		CreatedAt:    req.CreatedAt,
+		UpdatedAt:    req.UpdatedAt,
+	}
+
+	if req.CardImageData != "" {
+		imgData, err := base64.StdEncoding.DecodeString(req.CardImageData)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid image data")
+			return
+		}
+		imgPath := fmt.Sprintf("./uploads/cards/%s.jpg", c.ID)
+		if err := os.WriteFile(imgPath, imgData, 0644); err != nil {
+			log.Printf("image save error: %v", err)
+		} else {
+			c.CardImageURL = fmt.Sprintf("/uploads/cards/%s.jpg", c.ID)
+		}
+	}
+
+	if err := app.Repo.CreateContact(&c); err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusCreated, c)
+}
+
+func (app *App) handleUpdateContact(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	var c repo.Contact
+	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request")
+		return
+	}
+	c.ID = id
+	if err := app.Repo.UpdateContact(&c); err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			writeError(w, http.StatusNotFound, "contact not found")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, c)
+}
+
+func (app *App) handleContactOCR(w http.ResponseWriter, r *http.Request) {
+	apiKey := os.Getenv("ANTHROPIC_API_KEY")
+	if apiKey == "" {
+		writeError(w, http.StatusServiceUnavailable, "AI機能は設定されていません（ANTHROPIC_API_KEY 未設定）")
+		return
+	}
+
+	id := r.PathValue("id")
+	c, err := app.Repo.GetContact(id)
+	if err != nil || c == nil {
+		writeError(w, http.StatusNotFound, "contact not found")
+		return
+	}
+	if c.CardImageURL == "" {
+		writeError(w, http.StatusBadRequest, "名刺画像がありません")
+		return
+	}
+
+	imgPath := "." + c.CardImageURL
+	imgData, err := os.ReadFile(imgPath)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "画像の読み込みに失敗しました")
+		return
+	}
+
+	rawText, err := callClaudeOCR(base64.StdEncoding.EncodeToString(imgData), apiKey)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.OcrRawText = rawText
+	c.OcrStatus = "ocr_done"
+	c.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+	if err := app.Repo.UpdateContact(c); err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, c)
+}
+
+func callClaudeOCR(imgBase64, apiKey string) (string, error) {
+	reqBody, _ := json.Marshal(map[string]any{
+		"model":      "claude-haiku-4-5-20251001",
+		"max_tokens": 1024,
+		"messages": []map[string]any{
+			{
+				"role": "user",
+				"content": []any{
+					map[string]any{
+						"type": "image",
+						"source": map[string]any{
+							"type":       "base64",
+							"media_type": "image/jpeg",
+							"data":       imgBase64,
+						},
+					},
+					map[string]any{
+						"type": "text",
+						"text": "この名刺の文字をすべてそのまま読み取ってください。1行1要素で出力してください。テキストのみを返してください。",
+					},
+				},
+			},
+		},
+	})
+
+	httpReq, err := http.NewRequest("POST", "https://api.anthropic.com/v1/messages", bytes.NewReader(reqBody))
+	if err != nil {
+		return "", fmt.Errorf("リクエスト生成に失敗しました: %v", err)
+	}
+	httpReq.Header.Set("x-api-key", apiKey)
+	httpReq.Header.Set("anthropic-version", "2023-06-01")
+	httpReq.Header.Set("content-type", "application/json")
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		return "", fmt.Errorf("Claude API呼び出しに失敗しました: %v", err)
+	}
+	defer resp.Body.Close()
+
+	var apiResp struct {
+		Content []struct {
+			Text string `json:"text"`
+		} `json:"content"`
+		Error struct {
+			Message string `json:"message"`
+		} `json:"error"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		return "", fmt.Errorf("APIレスポンスの解析に失敗しました")
+	}
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("Claude APIエラー: %s", apiResp.Error.Message)
+	}
+	if len(apiResp.Content) == 0 {
+		return "", fmt.Errorf("AIからの応答が空でした")
+	}
+	return apiResp.Content[0].Text, nil
 }
 
 // ---------- AI 活動ログ構造化 ----------

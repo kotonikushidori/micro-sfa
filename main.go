@@ -37,12 +37,19 @@ func main() {
 		log.Fatalf("db.Seed: %v", err)
 	}
 
+	if err := os.MkdirAll("./uploads/cards", 0755); err != nil {
+		log.Fatalf("mkdir uploads: %v", err)
+	}
+
 	app := &handler.App{Repo: repo.New(rawDB)}
 
 	mux := http.NewServeMux()
 
 	// /api/* → API ハンドラ（静的ファイルより先に登録）
 	mux.Handle("/api/", http.StripPrefix("/api", app.Routes()))
+
+	// /uploads/* → アップロード画像
+	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
 
 	// それ以外 → static/ 配下の静的ファイル
 	mux.Handle("/", http.FileServer(http.Dir("./static")))

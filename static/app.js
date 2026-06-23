@@ -1,5 +1,5 @@
 // app.js: アプリケーションの起動・ルーティング・グローバル状態管理
-import { loadCurrentUser, logoutAPI, fetchAllData } from '/data.js'
+import { loadCurrentUser, logoutAPI, fetchAllData, fetchContacts } from '/data.js'
 import { DEFAULT_LOCK_CONFIG, getBantItems, getPhaseItems } from '/constants.js'
 import { renderLogin } from '/views/login.js'
 import { renderMy } from '/views/my.js'
@@ -12,6 +12,8 @@ import { renderCoach } from '/views/coach.js'
 import { renderLp } from '/views/lp.js'
 import { renderLpSales } from '/views/lp-sales.js'
 import { renderLpManager } from '/views/lp-manager.js'
+import { renderContacts } from '/views/contacts.js'
+import { renderContactQuick } from '/views/contact-quick.js'
 
 // ✅ 状態はすべて AppState に一元管理。各 view は AppState を読み書きする。
 export const AppState = {
@@ -21,6 +23,7 @@ export const AppState = {
   users: [],
   depts: [],
   activities: [],
+  contacts: [],
   targets: { dept: {}, rep: {} },
   lockConfig: DEFAULT_LOCK_CONFIG,
   settings: { fiscalStartMonth: 4, bantPreset: 'default', phasePreset: 'default' },
@@ -29,10 +32,10 @@ export const AppState = {
 }
 
 const ROLE_CONFIG = {
-  sales:     { defaultHash: '#my',        nav: ['#my'],                                                 allow: ['#deal'] },
-  manager:   { defaultHash: '#kanban',    nav: ['#my', '#kanban', '#forecast', '#dashboard', '#coach'], allow: ['#deal'] },
-  executive: { defaultHash: '#dashboard', nav: ['#my', '#dashboard'],                                   allow: [] },
-  admin:     { defaultHash: '#master',    nav: ['#kanban', '#forecast', '#dashboard', '#master'],       allow: ['#deal'] },
+  sales:     { defaultHash: '#my',        nav: ['#my', '#contacts'],                                                          allow: ['#deal', '#contact-quick', '#contact'] },
+  manager:   { defaultHash: '#kanban',    nav: ['#my', '#kanban', '#forecast', '#dashboard', '#coach', '#contacts'],          allow: ['#deal', '#contact-quick', '#contact'] },
+  executive: { defaultHash: '#dashboard', nav: ['#my', '#dashboard'],                                                         allow: [] },
+  admin:     { defaultHash: '#master',    nav: ['#kanban', '#forecast', '#dashboard', '#master'],                             allow: ['#deal'] },
 }
 
 const NAV_LABELS = {
@@ -42,6 +45,7 @@ const NAV_LABELS = {
   '#dashboard': 'ダッシュボード',
   '#master':    'マスター管理',
   '#coach':     '指導ダッシュボード',
+  '#contacts':  'コンタクト',
 }
 
 const NAV_ICONS = {
@@ -51,6 +55,7 @@ const NAV_ICONS = {
   '#dashboard': '📊',
   '#master':    '⚙️',
   '#coach':     '👥',
+  '#contacts':  '📇',
 }
 
 function canAccess(role, hash) {
@@ -63,11 +68,15 @@ function canAccess(role, hash) {
 // サーバーから全データを取得して AppState を更新する（非同期）
 export async function refreshState() {
   try {
-    const { deals, users, depts, activities, targets, settings } = await fetchAllData()
+    const [{ deals, users, depts, activities, targets, settings }, contacts] = await Promise.all([
+      fetchAllData(),
+      fetchContacts().catch(() => []),
+    ])
     AppState.deals      = deals      ?? []
     AppState.users      = users      ?? []
     AppState.depts      = depts      ?? []
     AppState.activities = activities ?? []
+    AppState.contacts   = contacts   ?? []
     AppState.targets    = targets    ?? { dept: {}, rep: {} }
     AppState.lockConfig = settings?.lockConfig ?? DEFAULT_LOCK_CONFIG
     AppState.settings   = settings  ?? AppState.settings
@@ -132,13 +141,15 @@ async function route() {
   window.scrollTo(0, 0)
 
   switch (base) {
-    case '#my':        renderMy(root);            break
-    case '#deal':      renderDeal(root, hash);     break
-    case '#kanban':    renderKanban(root);          break
-    case '#forecast':  renderForecast(root);        break
-    case '#dashboard': renderDashboard(root);       break
-    case '#master':    renderMaster(root);          break
-    case '#coach':     renderCoach(root);           break
+    case '#my':             renderMy(root);                    break
+    case '#deal':           renderDeal(root, hash);            break
+    case '#kanban':         renderKanban(root);                break
+    case '#forecast':       renderForecast(root);              break
+    case '#dashboard':      renderDashboard(root);             break
+    case '#master':         renderMaster(root);                break
+    case '#coach':          renderCoach(root);                 break
+    case '#contacts':       renderContacts(root);              break
+    case '#contact-quick':  renderContactQuick(root);          break
     default: root.innerHTML = '<p class="not-found">ページが見つかりません</p>'
   }
 }

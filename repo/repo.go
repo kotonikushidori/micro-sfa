@@ -409,6 +409,101 @@ func (r *DB) PurgeExpiredSessions() error {
 	return err
 }
 
+// ---------- Contacts ----------
+
+func (r *DB) ListContacts() ([]Contact, error) {
+	rows, err := r.db.Query(
+		`SELECT id,card_image_url,quick_label,quick_memo,event_name,captured_at,
+		        ocr_status,ocr_raw_text,company_name,department,title,name,
+		        address,tel,email,phase,next_action_date,next_action_memo,
+		        deal_id,referral_count,assignee_id,assignee_name,created_at,updated_at
+		 FROM contacts ORDER BY captured_at DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var contacts []Contact
+	for rows.Next() {
+		c, err := scanContact(rows)
+		if err != nil {
+			return nil, err
+		}
+		contacts = append(contacts, c)
+	}
+	return contacts, rows.Err()
+}
+
+func (r *DB) GetContact(id string) (*Contact, error) {
+	row := r.db.QueryRow(
+		`SELECT id,card_image_url,quick_label,quick_memo,event_name,captured_at,
+		        ocr_status,ocr_raw_text,company_name,department,title,name,
+		        address,tel,email,phase,next_action_date,next_action_memo,
+		        deal_id,referral_count,assignee_id,assignee_name,created_at,updated_at
+		 FROM contacts WHERE id=?`, id)
+	c, err := scanContact(row)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &c, nil
+}
+
+func (r *DB) CreateContact(c *Contact) error {
+	_, err := r.db.Exec(
+		`INSERT INTO contacts(id,card_image_url,quick_label,quick_memo,event_name,captured_at,
+		  ocr_status,ocr_raw_text,company_name,department,title,name,
+		  address,tel,email,phase,next_action_date,next_action_memo,
+		  deal_id,referral_count,assignee_id,assignee_name,created_at,updated_at)
+		 VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+		c.ID, c.CardImageURL, c.QuickLabel, c.QuickMemo, c.EventName, c.CapturedAt,
+		c.OcrStatus, c.OcrRawText, c.CompanyName, c.Department, c.Title, c.Name,
+		c.Address, c.Tel, c.Email, c.Phase,
+		nullString(c.NextActionDate), c.NextActionMemo,
+		nullString(c.DealID), c.ReferralCount,
+		c.AssigneeID, c.AssigneeName, c.CreatedAt, c.UpdatedAt,
+	)
+	return err
+}
+
+func (r *DB) UpdateContact(c *Contact) error {
+	res, err := r.db.Exec(
+		`UPDATE contacts SET card_image_url=?,quick_label=?,quick_memo=?,event_name=?,
+		  ocr_status=?,ocr_raw_text=?,company_name=?,department=?,title=?,name=?,
+		  address=?,tel=?,email=?,phase=?,next_action_date=?,next_action_memo=?,
+		  deal_id=?,referral_count=?,assignee_id=?,assignee_name=?,updated_at=?
+		 WHERE id=?`,
+		c.CardImageURL, c.QuickLabel, c.QuickMemo, c.EventName,
+		c.OcrStatus, c.OcrRawText, c.CompanyName, c.Department, c.Title, c.Name,
+		c.Address, c.Tel, c.Email, c.Phase,
+		nullString(c.NextActionDate), c.NextActionMemo,
+		nullString(c.DealID), c.ReferralCount,
+		c.AssigneeID, c.AssigneeName, c.UpdatedAt, c.ID,
+	)
+	if err != nil {
+		return err
+	}
+	return expectOne(res)
+}
+
+func scanContact(s scanner) (Contact, error) {
+	var c Contact
+	var nextActionDate, dealID sql.NullString
+	err := s.Scan(
+		&c.ID, &c.CardImageURL, &c.QuickLabel, &c.QuickMemo, &c.EventName, &c.CapturedAt,
+		&c.OcrStatus, &c.OcrRawText, &c.CompanyName, &c.Department, &c.Title, &c.Name,
+		&c.Address, &c.Tel, &c.Email, &c.Phase, &nextActionDate, &c.NextActionMemo,
+		&dealID, &c.ReferralCount, &c.AssigneeID, &c.AssigneeName, &c.CreatedAt, &c.UpdatedAt,
+	)
+	if err != nil {
+		return c, err
+	}
+	c.NextActionDate = nextActionDate.String
+	c.DealID = dealID.String
+	return c, nil
+}
+
 // ---------- ヘルパー ----------
 
 func boolInt(b bool) int {

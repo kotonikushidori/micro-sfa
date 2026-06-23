@@ -458,3 +458,51 @@ export function isWonInQuarter(deal, quarterKey, fiscalStartMonth = 4) {
   const dt = new Date(deal.updatedAt)
   return dt >= start && dt < end
 }
+
+// ---------- コンタクト管理定数 ----------
+
+export const CONTACT_QUICK_LABELS = [
+  { key: 'hot',      label: '有望',       color: '#ef4444', bg: '#fee2e2' },
+  { key: 'followup', label: '要フォロー', color: '#f59e0b', bg: '#fef3c7' },
+  { key: 'cold',     label: 'とりあえず', color: '#6b7280', bg: '#f3f4f6' },
+]
+
+export const CONTACT_PHASES = [
+  { key: 'card',      label: '名刺交換',   desc: 'お礼メール送付前' },
+  { key: 'followed',  label: 'フォロー済', desc: 'お礼送付済み・情報提供段階' },
+  { key: 'met',       label: 'MTG済',      desc: '商談・打ち合わせ実施済み' },
+  { key: 'nurturing', label: '継続接触',   desc: '定期的なフォロー中' },
+  { key: 'deal',      label: '案件化',     desc: '案件として登録済み' },
+]
+
+export const CONTACT_PHASE_CHECKLIST = {
+  card: [
+    { id: 'c1', text: 'お礼メール送付（48時間以内）' },
+    { id: 'c2', text: 'SNS接続（LinkedIn / X 等）' },
+    { id: 'c3', text: '業種・役職の確認メモ' },
+  ],
+  followed: [
+    { id: 'f1', text: '情報共有メール送付' },
+    { id: 'f2', text: 'MTG打診' },
+    { id: 'f3', text: '課題仮説メモ' },
+  ],
+  met: [
+    { id: 'm1', text: '議事録登録' },
+    { id: 'm2', text: '次回接触予定日設定' },
+    { id: 'm3', text: '案件化可否判定' },
+  ],
+  nurturing: [
+    { id: 'n1', text: '定期接触（四半期）' },
+    { id: 'n2', text: '紹介依頼の機会探索' },
+  ],
+  deal: [
+    { id: 'd1', text: '案件レコード新規作成・紐付け' },
+    { id: 'd2', text: 'BANT情報入力開始' },
+  ],
+}
+
+export const CONTACT_OCR_STATUS = {
+  raw:       { label: '未整備', icon: '📋', cls: 'raw' },
+  ocr_done:  { label: 'OCR済',  icon: '✏️', cls: 'ocr' },
+  confirmed: { label: '確認済', icon: '✓',  cls: 'done' },
+}
