@@ -1369,8 +1369,8 @@ canvas { max-width: 100%; }
   /* ⑤ ページヘッダーのボタン非表示（FABで代替） */
   .page-header .btn-primary { display: none; }
 
-  /* ⑥ FAB 表示 */
-  .fab-register { display: flex; }
+  /* ⑥ FAB 表示・ボトムナビの上に配置 */
+  .fab-register { display: flex; bottom: 76px; }
 
   /* ⑦ ヘッダー：サービス名非表示・ナビ非表示（ボトムナビに移行） */
   .app-title { display: none; }
