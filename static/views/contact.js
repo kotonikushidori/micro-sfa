@@ -1,6 +1,6 @@
 // contact.js: コンタクト詳細・編集画面（基本情報 + フェーズ管理）
 import { AppState } from '/app.js'
-import { updateContact } from '/data.js'
+import { updateContact, triggerContactOCR } from '/data.js'
 import { CONTACT_QUICK_LABELS, CONTACT_PHASES, CONTACT_PHASE_CHECKLIST } from '/constants.js'
 
 export function renderContact(root, hash) {
@@ -36,6 +36,10 @@ export function renderContact(root, hash) {
       ${contact.cardImageUrl ? `
         <div class="contact-card-image-wrap">
           <img src="${contact.cardImageUrl}" alt="名刺画像" class="contact-card-image" />
+          <button type="button" id="cd-ocr-btn" class="btn btn-secondary btn-sm cd-ocr-btn">
+            🔍 OCRでフォームに読み込む
+          </button>
+          <div id="cd-ocr-feedback" class="cq-feedback hidden"></div>
         </div>
       ` : ''}
 
@@ -144,6 +148,47 @@ export function renderContact(root, hash) {
   `
 
   let selectedLabel = contact.quickLabel
+  let ocrDone = false
+
+  // OCR
+  const ocrBtn = document.getElementById('cd-ocr-btn')
+  if (ocrBtn) {
+    ocrBtn.addEventListener('click', async () => {
+      ocrBtn.disabled = true
+      ocrBtn.textContent = '読み取り中...'
+      const ocrFb = document.getElementById('cd-ocr-feedback')
+      try {
+        const updated = await triggerContactOCR(id)
+        const idx = AppState.contacts.findIndex(c => c.id === id)
+        if (idx !== -1) AppState.contacts[idx] = updated
+
+        let fields = null
+        try { fields = JSON.parse(updated.ocrRawText) } catch (_) { /* 非JSON時はスキップ */ }
+
+        if (fields) {
+          if (fields.name)        document.getElementById('cd-name').value        = fields.name
+          if (fields.companyName) document.getElementById('cd-company').value     = fields.companyName
+          if (fields.department)  document.getElementById('cd-dept').value        = fields.department
+          if (fields.title)       document.getElementById('cd-title-field').value = fields.title
+          if (fields.tel)         document.getElementById('cd-tel').value         = fields.tel
+          if (fields.email)       document.getElementById('cd-email').value       = fields.email
+          if (fields.address)     document.getElementById('cd-address').value     = fields.address
+          ocrDone = true
+          ocrFb.textContent = '✓ 読み取り完了。内容を確認して保存してください。'
+          ocrFb.className = 'cq-feedback cq-feedback--success'
+        } else {
+          ocrFb.textContent = '読み取り結果をフォームに反映できませんでした。手動で入力してください。'
+          ocrFb.className = 'cq-feedback cq-feedback--error'
+        }
+      } catch (e) {
+        const ocrFb2 = document.getElementById('cd-ocr-feedback')
+        if (ocrFb2) { ocrFb2.textContent = `OCRエラー: ${e.message}`; ocrFb2.className = 'cq-feedback cq-feedback--error' }
+      } finally {
+        ocrBtn.disabled = false
+        ocrBtn.textContent = '🔍 OCRでフォームに読み込む'
+      }
+    })
+  }
 
   root.querySelectorAll('.cq-label-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -204,6 +249,7 @@ export function renderContact(root, hash) {
       phase,
       nextActionDate: document.getElementById('cd-next-date').value || '',
       nextActionMemo: document.getElementById('cd-next-memo').value.trim(),
+      ocrStatus:      ocrDone ? 'confirmed' : contact.ocrStatus,
       updatedAt:      new Date().toISOString(),
     })
   }

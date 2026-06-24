@@ -1697,7 +1697,7 @@ canvas { max-width: 100%; }
   max-width: 720px;
 }
 
-.contact-card-image-wrap { text-align: center; }
+.contact-card-image-wrap { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .contact-card-image {
   max-width: 100%;
   max-height: 220px;
@@ -1705,6 +1705,7 @@ canvas { max-width: 100%; }
   border: 1px solid var(--color-border);
   object-fit: contain;
 }
+.cd-ocr-btn { min-width: 200px; }
 
 .cd-section-title {
   font-size: 13px;

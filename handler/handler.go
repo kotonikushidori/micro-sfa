@@ -713,7 +713,7 @@ func callClaudeOCR(imgBase64, apiKey string) (string, error) {
 					},
 					map[string]any{
 						"type": "text",
-						"text": "この名刺の文字をすべてそのまま読み取ってください。1行1要素で出力してください。テキストのみを返してください。",
+						"text": "この名刺の情報を読み取り、以下のJSON形式のみで出力してください。マークダウン・説明文は不要です。値が読み取れない場合は空文字にしてください。\n{\"name\":\"\",\"companyName\":\"\",\"department\":\"\",\"title\":\"\",\"tel\":\"\",\"email\":\"\",\"address\":\"\"}",
 					},
 				},
 			},
