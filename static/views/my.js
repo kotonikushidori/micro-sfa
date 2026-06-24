@@ -87,7 +87,7 @@ export function renderMy(root) {
 
   // 自分の未整備コンタクト
   const myRawContacts = AppState.contacts.filter(
-    c => c.assignee_id === user.id && c.ocrStatus === 'raw'
+    c => c.assignee_id === user.id && c.ocrStatus === 'raw' && !c.name && !c.companyName
   )
 
   root.innerHTML = `

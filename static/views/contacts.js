@@ -6,7 +6,7 @@ export function renderContacts(root) {
   const user     = AppState.currentUser
   const contacts = AppState.contacts
   const myContacts = contacts.filter(c => c.assignee_id === user.id)
-  const rawCount   = contacts.filter(c => c.ocrStatus === 'raw').length
+  const rawCount   = contacts.filter(isUnprocessed).length
 
   root.innerHTML = `
     <div class="page-header">
@@ -47,7 +47,7 @@ export function renderContacts(root) {
       const filter = btn.dataset.filter
       let filtered
       if (filter === 'mine')    filtered = myContacts
-      else if (filter === 'raw') filtered = contacts.filter(c => c.ocrStatus === 'raw')
+      else if (filter === 'raw') filtered = contacts.filter(isUnprocessed)
       else                       filtered = contacts
       document.getElementById('contacts-list').innerHTML = renderContactCards(filtered)
     })
@@ -64,6 +64,11 @@ function renderContactCards(contacts) {
     `
   }
   return contacts.map(c => renderContactCard(c)).join('')
+}
+
+// 名前・会社名どちらも未入力かつOCR未実施 → 本当に未整備
+function isUnprocessed(c) {
+  return c.ocrStatus === 'raw' && !c.name && !c.companyName
 }
 
 function renderContactCard(c) {
