@@ -752,7 +752,13 @@ func callClaudeOCR(imgBase64, apiKey string) (string, error) {
 	if len(apiResp.Content) == 0 {
 		return "", fmt.Errorf("AIからの応答が空でした")
 	}
-	return apiResp.Content[0].Text, nil
+	raw := apiResp.Content[0].Text
+	log.Printf("[OCR] len=%d starts_with_brace=%v has_code_block=%v",
+		len(raw),
+		strings.HasPrefix(strings.TrimSpace(raw), "{"),
+		strings.Contains(raw, "```"),
+	)
+	return raw, nil
 }
 
 // ---------- AI 活動ログ構造化 ----------
