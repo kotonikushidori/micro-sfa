@@ -4,7 +4,7 @@ export function renderLp(root) {
     <div class="lp-select-wrapper">
       <div class="lp-select-hero">
         <h1 class="lp-logo">micro-SFA</h1>
-        <p class="lp-select-lead">あなたはどちらですか？</p>
+        <p class="lp-select-lead">あなたはどれですか？</p>
       </div>
       <div class="lp-select-cards">
         <a href="#lp-sales" class="lp-select-card">
@@ -17,6 +17,12 @@ export function renderLp(root) {
           <div class="lp-select-card-icon">📊</div>
           <h2 class="lp-select-card-title">マネージャー・チームリーダー</h2>
           <p class="lp-select-card-desc">言いたいけど言えない。でも黙ってると詰められる。その悩みをなくしたい。</p>
+          <span class="lp-select-card-arrow">詳しく見る →</span>
+        </a>
+        <a href="#lp-startup" class="lp-select-card">
+          <div class="lp-select-card-icon">🚀</div>
+          <h2 class="lp-select-card-title">起業・スタートアップ</h2>
+          <p class="lp-select-card-desc">会うのは得意。でもフォローが続かない。名刺を縁に変えて、案件に育てたい。</p>
           <span class="lp-select-card-arrow">詳しく見る →</span>
         </a>
       </div>

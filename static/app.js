@@ -12,6 +12,7 @@ import { renderCoach } from '/views/coach.js'
 import { renderLp } from '/views/lp.js'
 import { renderLpSales } from '/views/lp-sales.js'
 import { renderLpManager } from '/views/lp-manager.js'
+import { renderLpStartup } from '/views/lp-startup.js'
 import { renderContacts } from '/views/contacts.js'
 import { renderContactQuick } from '/views/contact-quick.js'
 import { renderContact } from '/views/contact.js'
@@ -124,6 +125,7 @@ async function route() {
   if (hash === '#lp')         { updateHeader(); root.innerHTML = ''; renderLp(root);        return }
   if (hash === '#lp-sales')   { updateHeader(); root.innerHTML = ''; renderLpSales(root);   return }
   if (hash === '#lp-manager') { updateHeader(); root.innerHTML = ''; renderLpManager(root); return }
+  if (hash === '#lp-startup') { updateHeader(); root.innerHTML = ''; renderLpStartup(root); return }
 
   if (!AppState.currentUser) {
     navigate('#login')
