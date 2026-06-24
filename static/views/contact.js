@@ -172,7 +172,10 @@ export function renderContact(root, hash) {
         if (idx !== -1) AppState.contacts[idx] = updated
 
         let fields = null
-        try { fields = JSON.parse(updated.ocrRawText) } catch (_) { /* 非JSON時はスキップ */ }
+        const jsonMatch = updated.ocrRawText.match(/\{[\s\S]*\}/)
+        if (jsonMatch) {
+          try { fields = JSON.parse(jsonMatch[0]) } catch (_) { /* パース失敗 */ }
+        }
 
         if (fields) {
           if (fields.name)        document.getElementById('cd-name').value        = fields.name
