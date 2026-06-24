@@ -301,9 +301,30 @@ export function renderDeal(root, hash) {
     return sel.value
   }
 
+  // コンタクトからの遷移時：アコーディオンを開いて金額欄へスクロール
+  if (fromContact) {
+    const accordion = document.querySelector('.basic-info-accordion')
+    if (accordion) accordion.open = true
+    setTimeout(() => {
+      document.getElementById('deal-amount')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
+  }
+
   // フォーム送信
   document.getElementById('deal-form').addEventListener('submit', async (e) => {
     e.preventDefault()
+
+    // 必須バリデーション
+    const missing = []
+    if (!document.getElementById('deal-name').value.trim()) missing.push('案件名')
+    if (!document.getElementById('deal-amount').value)      missing.push('売上金額')
+    if (!document.getElementById('deal-close-date').value)  missing.push('想定受注日')
+    if (missing.length > 0) {
+      showDealToast(`未入力の必須項目：${missing.join('・')}`)
+      document.querySelector('.basic-info-accordion')?.setAttribute('open', '')
+      return
+    }
+
     const now = new Date().toISOString()
 
     const assigneeId = isSales ? AppState.currentUser.id : document.getElementById('deal-assignee').value
@@ -754,6 +775,21 @@ function renderActivityList(activities) {
       </div>
     `
   }).join('')
+}
+
+function showDealToast(msg) {
+  const existing = document.getElementById('deal-toast')
+  if (existing) existing.remove()
+  const el = document.createElement('div')
+  el.id = 'deal-toast'
+  el.className = 'deal-toast'
+  el.textContent = msg
+  document.body.appendChild(el)
+  requestAnimationFrame(() => el.classList.add('deal-toast--show'))
+  setTimeout(() => {
+    el.classList.remove('deal-toast--show')
+    setTimeout(() => el.remove(), 300)
+  }, 4000)
 }
 
 // ---------- ロック済み案件の読み取り専用ビュー ----------
