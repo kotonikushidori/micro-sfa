@@ -29,13 +29,13 @@ export function renderContacts(root) {
     ` : ''}
 
     <div class="contacts-filter-row">
-      <button class="tab-btn active" data-filter="all">すべて <span class="tab-count">${contacts.length}</span></button>
-      <button class="tab-btn" data-filter="mine">自分のみ <span class="tab-count">${myContacts.length}</span></button>
+      <button class="tab-btn" data-filter="all">すべて <span class="tab-count">${contacts.length}</span></button>
+      <button class="tab-btn active" data-filter="mine">自分のみ <span class="tab-count">${myContacts.length}</span></button>
       <button class="tab-btn" data-filter="raw">未整備 <span class="tab-count">${rawCount}</span></button>
     </div>
 
     <div id="contacts-list">
-      ${renderContactCards(contacts)}
+      ${renderContactCards(myContacts)}
     </div>
 
     <a href="#contact-quick" class="fab-register" aria-label="クイック入力">+</a>
