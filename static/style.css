@@ -375,7 +375,7 @@ body {
 
 /* ---------- LP セレクター ---------- */
 .lp-select-wrapper {
-  max-width: 640px;
+  max-width: 960px;
   margin: 0 auto;
   padding: 60px 24px 80px;
   text-align: center;
