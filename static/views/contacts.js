@@ -79,7 +79,7 @@ function renderContactCard(c) {
   const sub         = (c.name && c.companyName) ? c.companyName : (c.quickMemo || '')
 
   return `
-    <a class="contact-card card" href="#contact?id=${c.id}">
+    <a class="contact-card card${c.dealId ? ' contact-card--deal-linked' : ''}" href="#contact?id=${c.id}">
       <div class="contact-card-header">
         <div class="contact-card-name">
           ${displayName}
@@ -90,6 +90,7 @@ function renderContactCard(c) {
             ? `<span class="quick-label-badge" style="color:${label.color};background:${label.bg}">${label.label}</span>`
             : ''}
           <span class="ocr-status-badge ocr-status-badge--${ocrInfo.cls}">${ocrInfo.icon} ${ocrInfo.label}</span>
+          ${c.dealId ? `<span class="deal-linked-badge">💼 案件化</span>` : ''}
         </div>
       </div>
       <div class="contact-card-meta">
