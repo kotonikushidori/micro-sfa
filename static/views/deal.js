@@ -1,16 +1,19 @@
 // deal.js: 案件入力・編集画面。Phase チェックボックスと BANT ラジオボタンで構成。
 import { AppState, refreshState } from '/app.js'
-import { createDeal, updateDeal, appendActivity } from '/data.js'
+import { createDeal, updateDeal, appendActivity, updateContact } from '/data.js'
 import { BALL_OWNER_OPTIONS, DEFAULT_BALL_OWNER, LOCK_TRIGGER_DEFS, ACTIVITY_TYPES, calcBantScore, calcCurrentPhase, calcYomi, isLocked, formatCurrency, calcPushCount } from '/constants.js'
 
 export function renderDeal(root, hash) {
   // URLパラメータから編集対象IDを取得（例: #deal?id=deal_01）
-  const params  = new URLSearchParams(hash.includes('?') ? hash.split('?')[1] : '')
-  const editId  = params.get('id')
-  const fromMy  = params.get('from') === 'my'
-  const backDest = fromMy ? '#my' : '#kanban'
-  const backLabel = fromMy ? '← マイページに戻る' : '← カンバンに戻る'
-  const isEdit  = !!editId
+  const params      = new URLSearchParams(hash.includes('?') ? hash.split('?')[1] : '')
+  const editId      = params.get('id')
+  const fromMy      = params.get('from') === 'my'
+  const contactId   = params.get('contactId')
+  const fromContact = !!contactId
+  const srcContact  = contactId ? AppState.contacts.find(c => c.id === contactId) : null
+  const backDest    = fromMy ? '#my' : fromContact ? `#contact?id=${contactId}` : '#kanban'
+  const backLabel   = fromMy ? '← マイページに戻る' : fromContact ? '← コンタクトに戻る' : '← カンバンに戻る'
+  const isEdit      = !!editId
 
   let deal = null
   if (isEdit) {
@@ -50,7 +53,7 @@ export function renderDeal(root, hash) {
             <div class="form-row">
               <div class="form-group flex-2">
                 <label for="deal-name">案件名 <span class="required">*</span></label>
-                <input type="text" id="deal-name" value="${deal?.name ?? ''}" required />
+                <input type="text" id="deal-name" value="${deal?.name ?? srcContact?.companyName ?? ''}" required />
               </div>
             </div>
             <div class="form-row">
@@ -83,7 +86,7 @@ export function renderDeal(root, hash) {
                 <label for="deal-assignee">担当者 <span class="required">*</span></label>
                 <select id="deal-assignee" ${isSales ? 'disabled' : ''}>
                   ${activeUsers.map(u => `
-                    <option value="${u.id}" ${(deal?.assignee_id ?? AppState.currentUser.id) === u.id ? 'selected' : ''}>
+                    <option value="${u.id}" ${(deal?.assignee_id ?? srcContact?.assignee_id ?? AppState.currentUser.id) === u.id ? 'selected' : ''}>
                       ${u.name}
                     </option>
                   `).join('')}
@@ -349,6 +352,12 @@ export function renderDeal(root, hash) {
       await updateDeal(payload)
     } else {
       await createDeal(payload)
+      if (srcContact) {
+        const updatedContact = { ...srcContact, dealId: payload.id, updatedAt: now }
+        await updateContact(updatedContact)
+        const idx = AppState.contacts.findIndex(c => c.id === srcContact.id)
+        if (idx !== -1) AppState.contacts[idx] = updatedContact
+      }
     }
 
     window._navigate(backDest)

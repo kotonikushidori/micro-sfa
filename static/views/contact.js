@@ -108,15 +108,24 @@ export function renderContact(root, hash) {
           `).join('')}
         </div>
 
-        <div class="contact-checklist">
-          <p class="checklist-phase-label">【${currentPhase.label}】 完了チェック</p>
-          ${checklist.map(item => `
-            <label class="checklist-item">
-              <input type="checkbox" class="checklist-cb" />
-              <span>${item.text}</span>
-            </label>
-          `).join('')}
-        </div>
+        ${currentPhase.key === 'deal' ? `
+          <div class="contact-deal-cta">
+            ${contact.dealId
+              ? `<a href="#deal?id=${contact.dealId}" class="btn btn-primary btn-block">📋 紐付けた案件を見る</a>`
+              : `<a href="#deal?contactId=${contact.id}" class="btn btn-primary btn-block">＋ 案件を作成する</a>`
+            }
+          </div>
+        ` : `
+          <div class="contact-checklist">
+            <p class="checklist-phase-label">【${currentPhase.label}】 完了チェック</p>
+            ${checklist.map(item => `
+              <label class="checklist-item">
+                <input type="checkbox" class="checklist-cb" />
+                <span>${item.text}</span>
+              </label>
+            `).join('')}
+          </div>
+        `}
 
         ${nextPhase ? `
           <button type="button" id="cd-next-phase-btn" class="btn btn-secondary btn-block" style="margin-top:12px">
